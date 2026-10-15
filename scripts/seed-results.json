@@ -1,0 +1,161 @@
+{
+  "createdAt": "2026-10-15T18:51:07.508Z",
+  "project": "safestay_v1",
+  "landlords": [
+    {
+      "name": "Sharma Properties",
+      "address": "0x28AFA844a91910f947017C08E5E158C551A55D2b"
+    },
+    {
+      "name": "Sunrise PG",
+      "address": "0x99Ba2FA13d396e7cd013aC350eF1fd6d234224f7"
+    },
+    {
+      "name": "Lakeview Homes",
+      "address": "0x93D5e7eBE836CbE54dCC10f2A9BE68D5deaa7139"
+    }
+  ],
+  "tenants": [
+    {
+      "name": "tenant_aarav",
+      "address": "0xcCC322eD247A46B84c3b6B17583a152131B4eBf0"
+    },
+    {
+      "name": "tenant_diya",
+      "address": "0x3Eb3b15dce440beBF3151EE83f1BFe22383F0044"
+    },
+    {
+      "name": "tenant_rohan",
+      "address": "0x4dEB9F20379BA42e81614aA12Cf29E4fd74978af"
+    }
+  ],
+  "demoTenant": "0x7Aa9A0A8337C76b238f9CA65E638AF32e8dE5ae4",
+  "demoLandlord": "0x99Ba2FA13d396e7cd013aC350eF1fd6d234224f7",
+  "entities": [
+    {
+      "key": "0xdf5fa8b149b84219905a02f24533e2322e9fa5fa2b050e179be4c55690163d76",
+      "type": "deposit_terms",
+      "tx": "0xf796de2b12161d6beef353dfb425b20549e8afb3c68c03dd798e1cc319616a0c"
+    },
+    {
+      "key": "0xf850e0ad6cce2e9af214f5a44e3cdd42c012c6c6e4c0c5b45b2fdaec1b481705",
+      "type": "deposit_outcome",
+      "tx": "0xb4fe716461440d8ac3b23f4736f749968327ed6a03a04864fd6faa631af89637"
+    },
+    {
+      "key": "0xaead5ff83a1c602f5268e29eb84a5ef9db623266cbae1c7923ebefcf6ac516a9",
+      "type": "evidence_log",
+      "tx": "0xb4fe716461440d8ac3b23f4736f749968327ed6a03a04864fd6faa631af89637"
+    },
+    {
+      "key": "0xe5731690b6118935bb1f0be034c917168a7bd2f16d7034898d88147ef3f35373",
+      "type": "deposit_terms",
+      "tx": "0x64c649b80fc18d704eca68a68ebe41a637f5b7c4a5d109a840e18322c22929fc"
+    },
+    {
+      "key": "0xe831822b44e9392f61d7bf43de0c4253a7653107e43fb621c3bebf8d83994335",
+      "type": "deposit_outcome",
+      "tx": "0x823995866e911739638d6c59f5e32e90613cb5dc295d07c5ef9b6e9b48b4400d"
+    },
+    {
+      "key": "0x7a82f020eb91b415a21be9e275b6db14d31c3d363e587bfd237d6d6b84b0e23b",
+      "type": "evidence_log",
+      "tx": "0x823995866e911739638d6c59f5e32e90613cb5dc295d07c5ef9b6e9b48b4400d"
+    },
+    {
+      "key": "0x25bd7b431e8c4a9ebe541fcb4ee379ce22ddf0824271f14a454580c8a31fdd66",
+      "type": "deposit_terms",
+      "tx": "0x2a48953e9ff2ba63a02adabd9c14c3409fa96de94587286c416b34d6bdcd139d"
+    },
+    {
+      "key": "0x2aff60f7f5573e5c50e1421eb95e59b8498f1915e8804bcc29e5f248008d23f8",
+      "type": "deposit_outcome",
+      "tx": "0xf01615cb3ca414eb38089784e40b68da9f66d9e94f74beb3a53d73387be1ac30"
+    },
+    {
+      "key": "0xe22ac244b07365e78dc620543a334f1883a37afc2c4bdc12b287d4b5bcf118c1",
+      "type": "evidence_log",
+      "tx": "0xf01615cb3ca414eb38089784e40b68da9f66d9e94f74beb3a53d73387be1ac30"
+    },
+    {
+      "key": "0x1fcaebbaf946d62ada0c7a6807b589a269ff1cba0852e49739c52eb0063441f0",
+      "type": "deposit_terms",
+      "tx": "0xe0948823d11bb3b8e7e701d2acd854d60831716b89d505cec452d9de07de66d2"
+    },
+    {
+      "key": "0xf439f7e739028788f66e900c60ca1d7d8ea4eb747061bcffb1ff649ea60dd5b4",
+      "type": "deposit_outcome",
+      "tx": "0xc865cec9dc642eff74c9c8ca16ce97e2b19f6152bc8fcf6b17dd8acf92d57399"
+    },
+    {
+      "key": "0x62796b612afa75f577040b2d5e2fa6506752617b6489fd6ed206556c14e95b89",
+      "type": "evidence_log",
+      "tx": "0xc865cec9dc642eff74c9c8ca16ce97e2b19f6152bc8fcf6b17dd8acf92d57399"
+    },
+    {
+      "key": "0x0a5cdcc7c87561bda2bbfe2094d09fc7b89410aa3b273fb86858bcf86bf9b989",
+      "type": "deposit_terms",
+      "tx": "0x22101ec21c7d3c1b4ecf1624fb89f3987a5a4c3fcc622e62942de7b3499b4e4d"
+    },
+    {
+      "key": "0x08a8c9ad2e8a48b0f8c86fcb5cda6a1d883a63e4fa547ef434757485e25eac3d",
+      "type": "deposit_outcome",
+      "tx": "0xa4efc71cc8396cf8f24d25cbc9945f0f3f1d90ed7f23da2a220353b637fc4dd7"
+    },
+    {
+      "key": "0x4882184fbcf6e22daa50c37c329372ec9c5a4e9e9ab8773501e885ec88cdccaa",
+      "type": "evidence_log",
+      "tx": "0xa4efc71cc8396cf8f24d25cbc9945f0f3f1d90ed7f23da2a220353b637fc4dd7"
+    },
+    {
+      "key": "0x04c01455aed661e790abce42bf8fb25625c12f6ba7c8b682be9495185ae6c233",
+      "type": "deposit_terms",
+      "tx": "0x2448c40166b0929ad7e323c56b7d8ab1a10e54936cd4e935abe490e7e68361a8"
+    },
+    {
+      "key": "0xe8bc518885fcba91f855e65b72ed1c531477686ebf2bfe906cecd67258bd6da9",
+      "type": "deposit_outcome",
+      "tx": "0x857684d6582964175a622f015c2959bc31689305f457b4bf9c9a29144ccb21cb"
+    },
+    {
+      "key": "0xee27156526fd8ec1b58053d5fdc1bd0a5309a387c45875bf25a4a20542c45d46",
+      "type": "evidence_log",
+      "tx": "0x857684d6582964175a622f015c2959bc31689305f457b4bf9c9a29144ccb21cb"
+    },
+    {
+      "key": "0x6f0da34f8c3b3677423d215593f25a5a66e475d823333cd5898e1c04f60e572d",
+      "type": "deposit_terms",
+      "tx": "0xc7b0ad57ab4aeba5df01e0839ee407edbc3719e5b2b2c72fb81f0adc31a6fd25"
+    },
+    {
+      "key": "0x72964096f7172aaf03f2183e6ab660fd5685480be550e0f54eff51b0103661f8",
+      "type": "deposit_outcome",
+      "tx": "0x8a90a2c203c6351eabe3c7458f1614a8b4cfb7a7ea6b8c91bbf6239cb483eb26"
+    },
+    {
+      "key": "0x3d799438639bd773150ccf90bb9ee08d339cab309a621d9b5d4ff18448cdfd5e",
+      "type": "evidence_log",
+      "tx": "0x8a90a2c203c6351eabe3c7458f1614a8b4cfb7a7ea6b8c91bbf6239cb483eb26"
+    },
+    {
+      "key": "0xdb34902675a83de4f0fc1bb6e19cbf2f3226208f912f07825508f89d2241920d",
+      "type": "deposit_terms",
+      "tx": "0xb9bf2c8e82946bdd071b446b2ede43e912537560dfb015ed001a2cbb0336bc67"
+    },
+    {
+      "key": "0x743397b1ce4aec988bc7706de6f3d37c27369fd1c0c57675bcb81d602b615b00",
+      "type": "deposit_outcome",
+      "tx": "0x1636f0beffb5ad5b9a7750df4db4fc6841920133812427d50b72a838dbb6edf3"
+    },
+    {
+      "key": "0x0da6d43b4b28dd74b15dfc6bfdf71d203088a0be2dd823b73b85d0d1289dfac9",
+      "type": "evidence_log",
+      "tx": "0x1636f0beffb5ad5b9a7750df4db4fc6841920133812427d50b72a838dbb6edf3"
+    },
+    {
+      "key": "0x037d61320195f4e04a4f0647f0ea729808b6af02abd1d3d445abda83ce2bb7cd",
+      "type": "deposit_terms",
+      "tx": "0xf952d1fc9ce2af4d050f2f09736af3739784ae96c3ef2542a3539f4004afff61"
+    }
+  ]
+}
