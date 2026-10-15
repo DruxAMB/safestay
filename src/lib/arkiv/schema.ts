@@ -1,4 +1,4 @@
-import { addr, bool, bytes32, i32, key, str, u64, u256 } from "@arkiv-network/sdk/attr";
+import { addr, bytes32, i32, key, str, u64, u256 } from "@arkiv-network/sdk/attr";
 import type { Address, Hex } from "viem";
 import {
   PROJECT,
