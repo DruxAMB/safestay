@@ -18,6 +18,13 @@ export const metadata: Metadata = {
   title: "SafeStay — deposit history landlords can't rewrite",
   description:
     "Check any landlord's on-chain deposit record before you pay. Signed, queryable, and impossible to edit — Arkiv entities on Tiramisu.",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
+  openGraph: {
+    title: "SafeStay — deposit history landlords can't rewrite",
+    description:
+      "Check any landlord's on-chain deposit record before you pay. Signed, queryable, impossible to edit — Arkiv entities on Tiramisu.",
+    type: "website",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
