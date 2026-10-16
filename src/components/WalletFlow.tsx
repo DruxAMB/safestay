@@ -27,7 +27,7 @@ type MyTerms = Awaited<ReturnType<typeof browserMyTerms>>[number];
 /** The real signing path: connected wallet → sign as tenant or landlord.
  *  Not connected → this renders the demo panel instead (see record page). */
 export function WalletFlow() {
-  const { address, ready, connect } = useWallet();
+  const { address, ready, connect, error } = useWallet();
   const [role, setRole] = useState<"tenant" | "landlord">("tenant");
   const [myTerms, setMyTerms] = useState<MyTerms[] | null>(null);
   const [openTerms, setOpenTerms] = useState<TermsDto[] | null>(null);
@@ -74,9 +74,12 @@ export function WalletFlow() {
           Every entity you create is signed by <em>your</em> address — the creator provenance
           is the trust model.
         </p>
-        <Button className="mt-4" onClick={() => void connect()}>
+        <Button className="mt-4" onClick={() => void connect().catch(() => {})}>
           Connect wallet to sign
         </Button>
+        {error && (
+          <p role="alert" className="mt-2 text-sm text-danger">{error}</p>
+        )}
       </Card>
     );
   }

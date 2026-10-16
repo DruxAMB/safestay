@@ -1,7 +1,8 @@
+import { Suspense } from "react";
 import { io } from "next/cache";
 import { explorerAddressUrl } from "@/lib/arkiv/config";
 import { listDirectory } from "@/lib/arkiv/queries";
-import { Card } from "@/components/ui";
+import { Card, Skeleton } from "@/components/ui";
 import { ExternalLink } from "lucide-react";
 
 export const metadata = { title: "How SafeStay uses Arkiv" };
@@ -34,9 +35,31 @@ const QUERIES = [
   },
 ];
 
-export default async function AboutPage() {
+async function CreatorDirectory() {
   await io();
   const directory = await listDirectory();
+  if (directory.length === 0) {
+    return (
+      <p className="mt-3 text-sm text-muted-foreground">
+        No landlords have signed terms yet — the directory populates itself from chain.
+      </p>
+    );
+  }
+  return (
+    <ul className="mt-3 flex flex-col gap-2">
+      {directory.map((l) => (
+        <li key={l.address}>
+          <a href={explorerAddressUrl(l.address)} target="_blank" rel="noopener noreferrer"
+             className="inline-flex flex-wrap items-center gap-2 font-mono text-sm text-primary underline-offset-2 [@media(hover:hover)]:hover:underline">
+            {l.name ? `${l.name} · ` : ""}{l.address} · {l.termsCount} terms <ExternalLink size={12} aria-hidden />
+          </a>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+export default function AboutPage() {
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6">
       <h1 className="text-2xl font-semibold">How SafeStay uses Arkiv</h1>
@@ -105,16 +128,14 @@ export default async function AboutPage() {
           demo businesses; names appear only where the wallet signed its own{" "}
           <code className="font-mono">landlord_profile</code>.
         </p>
-        <ul className="mt-3 flex flex-col gap-2">
-          {directory.map((l) => (
-            <li key={l.address}>
-              <a href={explorerAddressUrl(l.address)} target="_blank" rel="noopener noreferrer"
-                 className="inline-flex flex-wrap items-center gap-2 font-mono text-sm text-primary underline-offset-2 [@media(hover:hover)]:hover:underline">
-                {l.name ? `${l.name} · ` : ""}{l.address} · {l.termsCount} terms <ExternalLink size={12} aria-hidden />
-              </a>
-            </li>
-          ))}
-        </ul>
+        <Suspense fallback={
+          <div aria-busy className="mt-3 flex flex-col gap-2">
+            <Skeleton className="h-5 w-3/4 rounded" />
+            <Skeleton className="h-5 w-2/3 rounded" />
+          </div>
+        }>
+          <CreatorDirectory />
+        </Suspense>
       </section>
 
       <section className="mt-8 text-sm text-muted-foreground">

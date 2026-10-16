@@ -37,6 +37,16 @@ export const useWallet = () => useContext(Ctx);
 
 const TIRAMISU_HEX = `0x${CHAIN_ID.toString(16)}`;
 
+/** Wallets can hang a request instead of rejecting it (locked vault, broken
+ *  extension internals). Bound every provider call — a hung eth_accounts must
+ *  not leave the UI in a perpetual "checking" state. */
+function withTimeout<T>(p: Promise<T>, ms: number, fallback: T): Promise<T> {
+  return Promise.race([
+    p.catch(() => fallback),
+    new Promise<T>((res) => setTimeout(() => res(fallback), ms)),
+  ]);
+}
+
 export function WalletProvider({ children }: { children: ReactNode }) {
   const [address, setAddress] = useState<Address | null>(null);
   const [ready, setReady] = useState(false);
@@ -46,15 +56,17 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let live = true;
     (async () => {
-      const a = await currentAccount().catch(() => null);
+      const a = await withTimeout(currentAccount(), 2500, null);
       if (!live) return;
       if (a) {
         const eth = getProvider();
-        const chain = (await eth?.request({ method: "eth_chainId" }).catch(() => null)) as
-          | string
-          | null;
+        const chain = (await withTimeout(
+          eth?.request({ method: "eth_chainId" }) ?? Promise.resolve(null),
+          1500,
+          null,
+        )) as string | null;
         setWrongChain(!!chain && chain.toLowerCase() !== TIRAMISU_HEX.toLowerCase());
-        setAddress(chain?.toLowerCase() === TIRAMISU_HEX.toLowerCase() ? a : a);
+        setAddress(a);
       }
       setReady(true);
     })();
@@ -86,7 +98,18 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   const connect = useCallback(async () => {
     setError(null);
     try {
-      const a = await connectWallet();
+      // Generous bound — the wallet shows its own unlock/approve UI, so a
+      // legit approval can take a while. A broken extension must still end
+      // the "Connecting…" state eventually.
+      const a = await Promise.race([
+        connectWallet(),
+        new Promise<never>((_, rej) =>
+          setTimeout(
+            () => rej(new Error("Wallet didn't respond — check that it's unlocked, then retry.")),
+            120_000,
+          ),
+        ),
+      ]);
       setAddress(a);
       setWrongChain(false);
       return a;
