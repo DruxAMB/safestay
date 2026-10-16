@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ShieldCheck } from "lucide-react";
+import { WalletProvider } from "@/components/WalletProvider";
+import { ConnectWallet } from "@/components/ConnectWallet";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -34,6 +36,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
+        <WalletProvider>
         <header className="border-b border-border bg-card/80 backdrop-blur">
           <nav className="mx-auto flex h-14 max-w-5xl items-center gap-5 px-4 sm:px-6" aria-label="Main">
             <Link href="/" className="flex items-center gap-2 font-semibold">
@@ -50,6 +53,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               <Link href="/about" className="min-h-11 inline-flex items-center rounded-md px-2 sm:px-3 [@media(hover:hover)]:hover:bg-muted">
                 About
               </Link>
+              <ConnectWallet />
             </div>
           </nav>
         </header>
@@ -64,6 +68,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <span className="ml-auto">Synthetic demo data — no real tenants or landlords</span>
           </div>
         </footer>
+        </WalletProvider>
       </body>
     </html>
   );

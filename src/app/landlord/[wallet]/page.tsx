@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { io } from "next/cache";
 import { isAddress, type Address } from "viem";
-import { getLandlordHistory } from "@/lib/arkiv/queries";
+import { getLandlordHistory, getProfile } from "@/lib/arkiv/queries";
 import { HistoryView } from "@/components/HistoryView";
 import { LiveWatcher } from "@/components/LiveWatcher";
 import { Skeleton } from "@/components/ui";
@@ -17,13 +17,25 @@ export default async function LandlordPage({
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6">
       <div className="mb-5 flex flex-wrap items-center gap-3">
-        <h1 className="text-xl font-semibold">Deposit history</h1>
+        <Suspense fallback={<h1 className="text-xl font-semibold">Deposit history</h1>}>
+          <LandlordTitle wallet={wallet} />
+        </Suspense>
         <LiveWatcher landlord={wallet} />
       </div>
       <Suspense fallback={<HistorySkeleton />}>
         <History wallet={wallet} />
       </Suspense>
     </div>
+  );
+}
+
+async function LandlordTitle({ wallet }: { wallet: string }) {
+  await io();
+  const profile = await getProfile(wallet as Address);
+  return (
+    <h1 className="text-xl font-semibold">
+      {profile?.name ? `${profile.name} — deposit history` : "Deposit history"}
+    </h1>
   );
 }
 

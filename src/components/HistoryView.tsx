@@ -63,8 +63,8 @@ export function HistoryView({ h }: { h: LandlordHistory }) {
         </h2>
         {h.outcomes.length === 0 ? (
           <EmptyState
-            title="No outcomes on record yet"
-            body="No tenant has recorded a deposit result for this wallet on Arkiv. Records are signed by tenant wallets and cannot be planted or edited later."
+            title="No outcomes on record"
+            body="Careful what this means: an empty record is not a clean record. This landlord may simply have no SafeStay history — absence of complaints is not proof of honesty. Records start only when this wallet signs terms and a tenant answers."
           />
         ) : (
           <ul className="flex flex-col gap-3">
@@ -119,7 +119,7 @@ export function HistoryView({ h }: { h: LandlordHistory }) {
         {h.terms.length === 0 ? (
           <EmptyState
             title="No signed terms"
-            body="This wallet has not signed any deposit terms yet."
+            body="This wallet has never signed deposit terms on SafeStay — it has no on-chain record yet. That tells you nothing either way; a blank wallet is not a trusted wallet."
           />
         ) : (
           <ul className="grid gap-3 sm:grid-cols-2">

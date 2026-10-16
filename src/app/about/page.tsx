@@ -1,4 +1,6 @@
-import { SEEDED_LANDLORDS, explorerAddressUrl } from "@/lib/arkiv/config";
+import { io } from "next/cache";
+import { explorerAddressUrl } from "@/lib/arkiv/config";
+import { listDirectory } from "@/lib/arkiv/queries";
 import { Card } from "@/components/ui";
 import { ExternalLink } from "lucide-react";
 
@@ -25,9 +27,16 @@ const QUERIES = [
     expr: "project='safestay_v1' AND entity_type='evidence_log' AND outcome_key=<key>",
     why: "key-typed attributes join records without a foreign-key layer.",
   },
+  {
+    name: "Landlord directory",
+    expr: "project='safestay_v1' AND entity_type IN ('deposit_terms','landlord_profile')",
+    why: "Directory membership = every wallet that signed terms; display names come only from profiles that wallet signed itself.",
+  },
 ];
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  await io();
+  const directory = await listDirectory();
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6">
       <h1 className="text-2xl font-semibold">How SafeStay uses Arkiv</h1>
@@ -89,17 +98,19 @@ export default function AboutPage() {
       </section>
 
       <section className="mt-8">
-        <h2 className="font-semibold">Creator wallets (synthetic demo data)</h2>
+        <h2 className="font-semibold">Creator wallets — read live from Arkiv</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          All records are signed by seeded burners — no real people, no PII. Every address
-          resolves on the public explorer.
+          Every wallet below signed at least one <code className="font-mono">deposit_terms</code>{" "}
+          entity — this list is a live query, not a config file. Seeded identities are synthetic
+          demo businesses; names appear only where the wallet signed its own{" "}
+          <code className="font-mono">landlord_profile</code>.
         </p>
         <ul className="mt-3 flex flex-col gap-2">
-          {SEEDED_LANDLORDS.map((l) => (
+          {directory.map((l) => (
             <li key={l.address}>
               <a href={explorerAddressUrl(l.address)} target="_blank" rel="noopener noreferrer"
-                 className="inline-flex items-center gap-2 font-mono text-sm text-primary underline-offset-2 [@media(hover:hover)]:hover:underline">
-                {l.name} · {l.address} <ExternalLink size={12} aria-hidden />
+                 className="inline-flex flex-wrap items-center gap-2 font-mono text-sm text-primary underline-offset-2 [@media(hover:hover)]:hover:underline">
+                {l.name ? `${l.name} · ` : ""}{l.address} · {l.termsCount} terms <ExternalLink size={12} aria-hidden />
               </a>
             </li>
           ))}

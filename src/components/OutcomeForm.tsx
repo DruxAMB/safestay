@@ -2,8 +2,8 @@
 
 import { useId, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
-import { recordOutcomeAction } from "@/app/actions";
 import type { TermsDto } from "@/lib/arkiv/schema";
+import type { ActionResult } from "@/app/actions";
 import { OUTCOME_LABEL, explorerEntityUrl, explorerTxUrl } from "@/lib/arkiv/config";
 import { inr, shortAddr } from "@/lib/format";
 import { Button, Card, EmptyState, Input, Label, Badge } from "@/components/ui";
@@ -15,10 +15,24 @@ async function sha256File(f: File): Promise<string> {
   return "0x" + [...new Uint8Array(h)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-export function RecordForm({ openTerms, tenant }: { openTerms: TermsDto[]; tenant: string }) {
+/** Tenant outcome form — presentational; `onSubmit` decides who signs:
+ *  the connected wallet (real) or the server demo tenant (labeled). */
+export function OutcomeForm({
+  openTerms,
+  onSubmit,
+  signerNote,
+  emptyTitle,
+  emptyBody,
+}: {
+  openTerms: TermsDto[];
+  onSubmit: (fd: FormData) => Promise<ActionResult>;
+  signerNote: React.ReactNode;
+  emptyTitle: string;
+  emptyBody: string;
+}) {
   const id = useId();
-  // outcome_id generated once per mount — retries resubmit the SAME id and
-  // the server returns the existing entity instead of writing a duplicate.
+  // outcome_id generated once per mount — a retried submit reuses the SAME
+  // id, so the chain returns the existing entity instead of a duplicate.
   const outcomeId = useMemo(() => `oc_${crypto.randomUUID().replaceAll("-", "").slice(0, 24)}`, []);
   const [termsKey, setTermsKey] = useState(openTerms[0]?.entityKey ?? "");
   const [outcome, setOutcome] = useState<"returned_full" | "returned_partial" | "withheld">("returned_partial");
@@ -26,7 +40,7 @@ export function RecordForm({ openTerms, tenant }: { openTerms: TermsDto[]; tenan
   const [comment, setComment] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [hashing, setHashing] = useState(false);
-  const [result, setResult] = useState<Awaited<ReturnType<typeof recordOutcomeAction>> | null>(null);
+  const [result, setResult] = useState<ActionResult | null>(null);
   const [pending, start] = useTransition();
 
   const selected = openTerms.find((t) => t.entityKey === termsKey);
@@ -48,18 +62,12 @@ export function RecordForm({ openTerms, tenant }: { openTerms: TermsDto[]; tenan
         fd.set("evidenceSize", String(file.size));
         setHashing(false);
       }
-      setResult(await recordOutcomeAction(fd));
+      setResult(await onSubmit(fd));
     });
   }
 
   if (openTerms.length === 0) {
-    return (
-      <EmptyState
-        title="No open terms for the demo tenant"
-        body={`Wallet ${shortAddr(tenant)} has no unanswered deposit terms. An outcome can only be recorded against terms a landlord signed naming this wallet — that two-way link is what stops fabricated reviews.`}
-        action={<Link href="/"><Button variant="secondary">Check a landlord instead</Button></Link>}
-      />
-    );
+    return <EmptyState title={emptyTitle} body={emptyBody} />;
   }
 
   if (result?.ok) {
@@ -68,7 +76,7 @@ export function RecordForm({ openTerms, tenant }: { openTerms: TermsDto[]; tenan
         <Badge tone="success">Recorded on Arkiv</Badge>
         <h2 className="mt-3 font-semibold">Outcome + evidence landed in one atomic batch</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          Both entities are now public on Tiramisu — the landlord’s history page updates live.
+          Both entities are public on Tiramisu — the landlord’s history page updates live.
         </p>
         <div className="mt-4 flex flex-col gap-2 font-mono text-sm">
           <a href={explorerEntityUrl(result.entityKey)} target="_blank" rel="noopener noreferrer"
@@ -206,10 +214,7 @@ export function RecordForm({ openTerms, tenant }: { openTerms: TermsDto[]; tenan
         {(pending || hashing) && <Loader2 size={16} className="animate-spin" aria-hidden />}
         {hashing ? "Hashing evidence…" : pending ? "Writing to Arkiv…" : "Record outcome + evidence on Arkiv"}
       </Button>
-      <p className="text-xs text-muted-foreground">
-        Signed by the demo tenant wallet <span className="font-mono">{shortAddr(tenant)}</span>.
-        One transaction, two entities — <code className="font-mono">executeBatch</code>.
-      </p>
+      <p className="text-xs text-muted-foreground">{signerNote}</p>
     </form>
   );
 }

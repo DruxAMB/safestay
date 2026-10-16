@@ -72,6 +72,16 @@ export function evidenceAttrs(input: {
   };
 }
 
+/** Landlord directory entry — self-signed ($creator = the landlord wallet
+ *  is the identity claim; nobody else can name them). */
+export function profileAttrs(input: { name: string; city: string }) {
+  return {
+    ...commonAttrs("landlord_profile"),
+    display_name: str(input.name),
+    city: str(input.city.toLowerCase()),
+  };
+}
+
 /** Typed value helpers for reading attributes back (values deserialize as
  *  {type, value} objects; numerics are bigint). */
 
@@ -138,6 +148,13 @@ export type EvidenceDto = {
   sha256: string;
   kind: EvidenceKind;
   filenameHint: string;
+};
+
+export type ProfileDto = {
+  entityKey: string;
+  creator: string; // = the landlord wallet (self-signed)
+  name: string;
+  city: string;
 };
 
 export type LandlordHistory = {

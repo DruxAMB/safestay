@@ -30,15 +30,17 @@ host this record (a reviews site, a broker, a housing app) can also edit it.
 
 ## Demo walkthrough
 
-1. Open the app → paste (or click) a seeded landlord, e.g. **Sunrise PG**
-   `0x99Ba2F…24f7` → the deposit history appears. No wallet, no signup.
+1. Open the app → click a landlord chip (read live from Arkiv) or search by
+   name/"0x…" → the deposit history appears. No wallet, no signup.
 2. Read the aggregate card: promised, returned, withheld, verified-link count,
    expiry countdown per record.
 3. Click any `terms 0x…` or outcome key → opens the Tiramisu explorer and shows
    the entity's real creator address and attributes.
-4. Go to **Record** → pick the open terms for the demo tenant → choose
-   "Returned partially" → submit. Outcome and evidence hash land in *one*
-   Arkiv transaction.
+4. Go to **Record** → **Connect wallet** (MetaMask → auto-switches to Tiramisu).
+   Landlord tab: sign `deposit_terms` naming a tenant — name your own wallet to
+   play both roles. Tenant tab: pick open terms that name you → choose an
+   outcome → submit. Outcome and evidence hash land in *one* Arkiv transaction,
+   signed by *your* address.
 5. Back on the landlord page, the green **Live on Arkiv** badge streams the new
    entity in over WebSocket — no refresh.
 
@@ -74,9 +76,11 @@ SHA-256. Names and photos never touch the chain.
 
 | Piece | Status |
 |---|---|
-| All landlord/tenant records | **Real Arkiv entities** on Tiramisu, seeded by burner wallets (see `scripts/seed.ts`, `scripts/seed-results.json`) |
-| The landlord/tenant identities | **Synthetic** — demo wallets generated for seeding; the footer says so. No real people are named |
-| Wallet connection | **Demo-mode** — the app signs as the seeded wallets so judges can write real entities without installing a wallet. The signer key is server-side, never in the browser |
+| All landlord/tenant records | **Real Arkiv entities** on Tiramisu, each signed by the wallet that owns the role (see `scripts/seed.ts`) |
+| Wallet connection | **Real** — EIP-1193 connect (MetaMask etc.), auto-switches to Tiramisu, you sign as your own address. A judge can play both roles solo by signing terms that name their own wallet |
+| Demo-mode signing | **Optional fallback, labeled** — without a wallet, the server signs as two seeded wallets so the write path is still exercisable. Clearly marked as demo identity, real entity |
+| The landlord directory | **Real chain data** — every wallet that signed `deposit_terms`; names come from self-signed `landlord_profile` entities (only the wallet itself can name itself) |
+| The landlord/tenant names | **Synthetic but honest** — seeded identities are named demo businesses; a real landlord registers their own name by signing a profile |
 | Photo evidence | **Hash only** — the file stays on-device; its SHA-256 is what goes on Arkiv |
 | Live updates | **Real** — `watchEntityEvents` over WebSocket, filtered to `project=safestay_v1` |
 

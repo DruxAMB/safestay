@@ -13,6 +13,7 @@ import {
   type EvidenceDto,
   type LandlordHistory,
   type OutcomeDto,
+  type ProfileDto,
   type TermsDto,
 } from "./schema";
 
@@ -207,4 +208,71 @@ export async function getEvidenceForOutcome(outcomeKey: Hex): Promise<EvidenceDt
     eq("outcome_key", key(outcomeKey)),
   ]);
   return res.entities.map(toEvidenceDto);
+}
+
+function toProfileDto(e: Entity): ProfileDto {
+  return {
+    entityKey: e.key,
+    creator: e.creator,
+    name: attrStr(e.attributes, "display_name") ?? "",
+    city: attrStr(e.attributes, "city") ?? "",
+  };
+}
+
+/** A landlord's self-signed profile, if any (creator-scoped — only they can
+ *  name themselves). */
+export async function getProfile(landlord: Address): Promise<ProfileDto | null> {
+  const reader = createReader();
+  const res = await walk(
+    reader,
+    [eq("project", str(PROJECT)), eq("entity_type", str("landlord_profile"))],
+    landlord,
+  );
+  const p = res.entities[0];
+  return p ? toProfileDto(p) : null;
+}
+
+/** The landlord directory — read entirely from chain. Every wallet that has
+ *  signed a `deposit_terms` is a landlord; its display name/city come from a
+ *  self-signed `landlord_profile` (creator === landlord — only they can
+ *  name themselves). No profiles → address-only entry, still real. */
+export async function listDirectory(): Promise<
+  { address: string; name?: string; city?: string; termsCount: number }[]
+> {
+  const reader = createReader();
+  const [termsRes, profilesRes] = await Promise.all([
+    walk(reader, [
+      eq("project", str(PROJECT)),
+      eq("entity_type", str("deposit_terms")),
+    ]),
+    walk(reader, [
+      eq("project", str(PROJECT)),
+      eq("entity_type", str("landlord_profile")),
+    ]),
+  ]);
+  const profilesByCreator = new Map<string, ProfileDto>();
+  for (const p of profilesRes.entities.map(toProfileDto)) {
+    // latest profile wins — profiles are replace-not-edit by design
+    if (!profilesByCreator.has(p.creator.toLowerCase())) {
+      profilesByCreator.set(p.creator.toLowerCase(), p);
+    }
+  }
+  const counts = new Map<string, number>();
+  for (const t of termsRes.entities) {
+    const c = (t.creator as string).toLowerCase();
+    counts.set(c, (counts.get(c) ?? 0) + 1);
+  }
+  return [...counts.entries()]
+    .map(([addrLc, termsCount]) => {
+      const p = profilesByCreator.get(addrLc);
+      return {
+        address: termsRes.entities.find(
+          (t) => (t.creator as string).toLowerCase() === addrLc,
+        )!.creator as string,
+        name: p?.name || undefined,
+        city: p?.city || undefined,
+        termsCount,
+      };
+    })
+    .sort((a, b) => b.termsCount - a.termsCount);
 }

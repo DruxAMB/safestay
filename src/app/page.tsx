@@ -1,5 +1,9 @@
+import { Suspense } from "react";
 import Link from "next/link";
+import { io } from "next/cache";
 import { LookupForm } from "@/components/LookupForm";
+import { listDirectory } from "@/lib/arkiv/queries";
+import { Skeleton } from "@/components/ui";
 import { ShieldCheck, FileSignature, Eye, Timer } from "lucide-react";
 
 export default function Home() {
@@ -18,7 +22,9 @@ export default function Home() {
           landlord signed — a record no platform, landlord, or we can edit or delete.
         </p>
         <div className="mt-2 max-w-2xl">
-          <LookupForm />
+          <Suspense fallback={<DirectorySkeleton />}>
+            <DirectoryLookup />
+          </Suspense>
         </div>
       </section>
 
@@ -60,7 +66,7 @@ export default function Home() {
             href="/record"
             className="inline-flex min-h-11 items-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground [@media(hover:hover)]:hover:bg-primary/90"
           >
-            <FileSignature size={16} aria-hidden /> Record an outcome (demo tenant)
+            <FileSignature size={16} aria-hidden /> Record on Arkiv
           </Link>
           <Link
             href="/feed"
@@ -70,6 +76,25 @@ export default function Home() {
           </Link>
         </div>
       </section>
+    </div>
+  );
+}
+
+async function DirectoryLookup() {
+  await io();
+  const directory = await listDirectory();
+  return <LookupForm directory={directory} />;
+}
+
+function DirectorySkeleton() {
+  return (
+    <div aria-busy>
+      <Skeleton className="h-11 w-full rounded-md" />
+      <div className="mt-4 flex gap-2">
+        <Skeleton className="h-11 w-44 rounded-full" />
+        <Skeleton className="h-11 w-52 rounded-full" />
+        <Skeleton className="h-11 w-40 rounded-full" />
+      </div>
     </div>
   );
 }
