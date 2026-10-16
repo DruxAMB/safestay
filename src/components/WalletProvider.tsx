@@ -9,7 +9,16 @@ import {
   type ReactNode,
 } from "react";
 import type { Address } from "viem";
-import { connectWallet, currentAccount, getProvider } from "@/lib/arkiv/browser";
+import {
+  connectWallet,
+  currentAccount,
+  discoveredWallets,
+  getProvider,
+  listenForWallets,
+  selectWallet,
+  selectedWalletUuid,
+  type Eip6963Detail,
+} from "@/lib/arkiv/browser";
 import { CHAIN_ID } from "@/lib/arkiv/config";
 
 type WalletCtx = {
@@ -19,9 +28,14 @@ type WalletCtx = {
   ready: boolean;
   /** wallet is on the wrong chain */
   wrongChain: boolean;
-  connect: () => Promise<Address>;
+  connect: (uuid?: string) => Promise<Address>;
   disconnect: () => void;
   error: string | null;
+  /** EIP-6963 wallets that announced themselves (empty = no multi-wallet) */
+  providers: Eip6963Detail[];
+  /** uuid of the wallet requests route to; null = browser default */
+  walletId: string | null;
+  select: (uuid: string | null) => void;
 };
 
 const Ctx = createContext<WalletCtx>({
@@ -31,6 +45,9 @@ const Ctx = createContext<WalletCtx>({
   connect: async () => "0x" as Address,
   disconnect: () => {},
   error: null,
+  providers: [],
+  walletId: null,
+  select: () => {},
 });
 
 export const useWallet = () => useContext(Ctx);
@@ -52,10 +69,20 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
   const [wrongChain, setWrongChain] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [providers, setProviders] = useState<Eip6963Detail[]>([]);
+  const [walletId, setWalletId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setWalletId(selectedWalletUuid());
+    return listenForWallets(() => setProviders(discoveredWallets()));
+  }, []);
 
   useEffect(() => {
     let live = true;
     (async () => {
+      // let EIP-6963 announcements land so a stored wallet selection resolves
+      // to its real provider before we probe it
+      await new Promise((r) => setTimeout(r, 300));
       const a = await withTimeout(currentAccount(), 2500, null);
       if (!live) return;
       if (a) {
@@ -75,6 +102,8 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  // Listeners attach to the SELECTED provider — reruns when the user picks
+  // a different wallet, so accountsChanged comes from the wallet in use.
   useEffect(() => {
     const eth = getProvider();
     if (!eth?.on) return;
@@ -93,10 +122,21 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       eth.removeListener?.("accountsChanged", onAccounts);
       eth.removeListener?.("chainChanged", onChain);
     };
+  }, [walletId]);
+
+  const select = useCallback((uuid: string | null) => {
+    selectWallet(uuid);
+    setWalletId(uuid);
+    setAddress(null);
+    setWrongChain(false);
   }, []);
 
-  const connect = useCallback(async () => {
+  const connect = useCallback(async (uuid?: string) => {
     setError(null);
+    if (uuid !== undefined) {
+      selectWallet(uuid);
+      setWalletId(uuid);
+    }
     try {
       // Generous bound — the wallet shows its own unlock/approve UI, so a
       // legit approval can take a while. A broken extension must still end
@@ -123,7 +163,9 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   const disconnect = useCallback(() => setAddress(null), []);
 
   return (
-    <Ctx.Provider value={{ address, ready, wrongChain, connect, disconnect, error }}>
+    <Ctx.Provider
+      value={{ address, ready, wrongChain, connect, disconnect, error, providers, walletId, select }}
+    >
       {children}
     </Ctx.Provider>
   );

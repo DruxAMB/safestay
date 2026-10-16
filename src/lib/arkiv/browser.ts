@@ -27,8 +27,61 @@ type Eip1193 = {
   removeListener?: (event: string, cb: (...args: unknown[]) => void) => void;
 };
 
+/* ---- EIP-6963 wallet discovery ----
+   Multiple wallet extensions race to set window.ethereum — and a broken
+   extension's stub can win while a healthy wallet sits behind its own
+   announcement. EIP-6963 lets us list every installed wallet and pick one. */
+
+export type Eip6963Detail = {
+  info: { uuid: string; name: string; icon: string; rdns?: string };
+  provider: Eip1193;
+};
+
+const discovered = new Map<string, Eip6963Detail>();
+const SELECT_KEY = "safestay_wallet_uuid";
+let selectedUuid: string | null = null;
+
+/** Subscribe to wallet announcements + request the current set. Call once
+ *  from a client component; returns an unsubscribe. */
+export function listenForWallets(onChange: () => void): () => void {
+  if (typeof window === "undefined") return () => {};
+  const handler = (ev: Event) => {
+    const d = (ev as CustomEvent<Eip6963Detail>).detail;
+    if (d?.info?.uuid && d.provider && !discovered.has(d.info.uuid)) {
+      discovered.set(d.info.uuid, d);
+      onChange();
+    }
+  };
+  window.addEventListener("eip6963:announceProvider", handler);
+  window.dispatchEvent(new Event("eip6963:requestProvider"));
+  return () => window.removeEventListener("eip6963:announceProvider", handler);
+}
+
+export function discoveredWallets(): Eip6963Detail[] {
+  return [...discovered.values()];
+}
+
+/** Restore/persist the chosen wallet. null = browser default (window.ethereum). */
+export function selectWallet(uuid: string | null) {
+  selectedUuid = uuid;
+  try {
+    if (uuid) localStorage.setItem(SELECT_KEY, uuid);
+    else localStorage.removeItem(SELECT_KEY);
+  } catch { /* private mode */ }
+}
+
+export function selectedWalletUuid(): string | null {
+  if (selectedUuid) return selectedUuid;
+  try {
+    selectedUuid = localStorage.getItem(SELECT_KEY);
+  } catch { /* private mode */ }
+  return selectedUuid;
+}
+
 export function getProvider(): Eip1193 | null {
   if (typeof window === "undefined") return null;
+  const uuid = selectedWalletUuid();
+  if (uuid && discovered.has(uuid)) return discovered.get(uuid)!.provider;
   return (window as unknown as { ethereum?: Eip1193 }).ethereum ?? null;
 }
 
