@@ -82,7 +82,12 @@ export function browserReader() {
   return createPublicClient({
     chain: tiramisu,
     cacheTime: 0,
-    transport: http(TIRAMISU_HTTP, { timeout: 8_000 }),
+    transport: http(TIRAMISU_HTTP, {
+      timeout: 8_000,
+      retryCount: 4,
+      retryDelay: 600,
+      batch: { batchSize: 32, wait: 20 },
+    }),
   });
 }
 
@@ -300,14 +305,22 @@ export async function browserOpenTermsFor(tenant: Address): Promise<
   { key: Hex; creator: string; depositInr: string; city: string; label: string; termsKey: Hex }[]
 > {
   const reader = browserReader();
-  const page = await reader
-    .select({ key: true, creator: true, attributes: true, payload: true })
-    .where(
-      eq("project", str(PROJECT)),
-      eq("entity_type", str("deposit_terms")),
-    )
-    .limit(200)
-    .fetch();
+  const [page, outPage] = await Promise.all([
+    reader
+      .select({ key: true, creator: true, attributes: true, payload: true })
+      .where(
+        eq("project", str(PROJECT)),
+        eq("entity_type", str("deposit_terms")),
+      )
+      .limit(200)
+      .fetch(),
+    reader
+      .select({ attributes: true })
+      .where(eq("project", str(PROJECT)), eq("entity_type", str("deposit_outcome")))
+      .createdBy(tenant)
+      .limit(200)
+      .fetch(),
+  ]);
   const mine = (page.entities as unknown as {
     key: Hex; creator: string; attributes: Attrs; toJson?: () => unknown;
   }[]).filter((e) => {
@@ -315,12 +328,6 @@ export async function browserOpenTermsFor(tenant: Address): Promise<
     return named && isAddressEqual(named, tenant);
   });
   // hide terms already answered by an outcome from this wallet
-  const outPage = await reader
-    .select({ attributes: true })
-    .where(eq("project", str(PROJECT)), eq("entity_type", str("deposit_outcome")))
-    .createdBy(tenant)
-    .limit(200)
-    .fetch();
   const answered = new Set(
     (outPage.entities as unknown as { attributes: Attrs }[])
       .map((e) => attrKey(e.attributes, "terms_key"))

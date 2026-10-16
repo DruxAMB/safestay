@@ -8,14 +8,19 @@ import { TIRAMISU_HTTP, TIRAMISU_WS } from "./config";
 export type ArkivReader = ReturnType<typeof createReader>;
 
 /** Public read client — no wallet, no key. Judges' path.
- *  cacheTime:0 + no-store per arkiv-app-integration guidance. */
+ *  cacheTime:0 + no-store per arkiv-app-integration guidance.
+ *  retryCount: the public RPC anonymous-cost-limits bursts (HTTP 429
+ *  ANON_COST_LIMITED) — viem retries 429 natively. batch: Tiramisu accepts
+ *  JSON-RPC batches, so concurrent reads coalesce into one request. */
 export function createReader() {
   return createPublicClient({
     chain: tiramisu,
     cacheTime: 0,
     transport: http(TIRAMISU_HTTP, {
       timeout: 8_000,
-      retryCount: 0,
+      retryCount: 4,
+      retryDelay: 600,
+      batch: { batchSize: 32, wait: 20 },
       fetchOptions: { cache: "no-store", redirect: "error" },
     }),
   });
@@ -41,7 +46,12 @@ function keyFromEnv(name: string): `0x${string}` {
 export function tenantWallet() {
   return createWalletClient({
     chain: tiramisu,
-    transport: http(TIRAMISU_HTTP, { timeout: 15_000 }),
+    transport: http(TIRAMISU_HTTP, {
+      timeout: 15_000,
+      retryCount: 4,
+      retryDelay: 600,
+      batch: { batchSize: 32, wait: 20 },
+    }),
     account: privateKeyToAccount(keyFromEnv("ARKIV_TENANT_KEY")),
   });
 }
@@ -50,7 +60,12 @@ export function tenantWallet() {
 export function landlordWallet() {
   return createWalletClient({
     chain: tiramisu,
-    transport: http(TIRAMISU_HTTP, { timeout: 15_000 }),
+    transport: http(TIRAMISU_HTTP, {
+      timeout: 15_000,
+      retryCount: 4,
+      retryDelay: 600,
+      batch: { batchSize: 32, wait: 20 },
+    }),
     account: privateKeyToAccount(keyFromEnv("ARKIV_LANDLORD_KEY")),
   });
 }

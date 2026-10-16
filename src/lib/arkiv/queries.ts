@@ -32,8 +32,12 @@ async function walk(
   reader: ArkivReader,
   predicates: Expression[],
   creator?: Address,
+  snapshot?: bigint,
 ) {
-  const snapshot = await reader.getBlockNumber({ cacheTime: 0 });
+  // Shared snapshot when the caller queries related sets — one block pin per
+  // logical read, so paired results are consistent AND the RPC gets hit once
+  // (the public endpoint anonymous-cost-limits bursts).
+  const at = snapshot ?? (await reader.getBlockNumber({ cacheTime: 0 }));
   let sel = reader
     .select({
       key: true,
@@ -44,21 +48,21 @@ async function walk(
       payload: true,
     })
     .where(...predicates)
-    .atBlock(snapshot)
+    .atBlock(at)
     .limit(200);
   if (creator) sel = sel.createdBy(creator);
   let page = await sel.fetch();
-  if (page.blockNumber !== snapshot) throw new Error("Query snapshot mismatch");
+  if (page.blockNumber !== at) throw new Error("Query snapshot mismatch");
   const entities = [...page.entities] as unknown as Entity[];
   let pages = 1;
   while (page.hasNextPage()) {
     if (pages >= MAX_PAGES) throw new Error("Query page budget exhausted");
     page = await page.next();
-    if (page.blockNumber !== snapshot) throw new Error("Query snapshot mismatch");
+    if (page.blockNumber !== at) throw new Error("Query snapshot mismatch");
     pages++;
     entities.push(...(page.entities as unknown as Entity[]));
   }
-  return { snapshot, entities };
+  return { snapshot: at, entities };
 }
 
 function jsonPayload(e: Entity): Record<string, unknown> {
@@ -121,16 +125,18 @@ function toEvidenceDto(e: Entity): EvidenceDto {
  *  proven by the linked terms naming them back, not an allowlist. */
 export async function getLandlordHistory(landlord: Address): Promise<LandlordHistory> {
   const reader = createReader();
+  const snapshot = await reader.getBlockNumber({ cacheTime: 0 });
   const [outcomesRes, termsRes] = await Promise.all([
     walk(reader, [
       eq("project", str(PROJECT)),
       eq("entity_type", str("deposit_outcome")),
       eq("landlord_wallet", addr(landlord)),
-    ]),
+    ], undefined, snapshot),
     walk(
       reader,
       [eq("project", str(PROJECT)), eq("entity_type", str("deposit_terms"))],
       landlord,
+      snapshot,
     ),
   ]);
 
@@ -170,13 +176,16 @@ export async function getLandlordHistory(landlord: Address): Promise<LandlordHis
 }
 
 /** Tenant-side: every terms record that names this tenant. */
-export async function getTermsForTenant(tenant: Address): Promise<TermsDto[]> {
+export async function getTermsForTenant(
+  tenant: Address,
+  snapshot?: bigint,
+): Promise<TermsDto[]> {
   const reader = createReader();
   const res = await walk(reader, [
     eq("project", str(PROJECT)),
     eq("entity_type", str("deposit_terms")),
     eq("tenant_wallet", addr(tenant)),
-  ]);
+  ], undefined, snapshot);
   return res.entities.map(toTermsDto);
 }
 
@@ -184,12 +193,14 @@ export async function getTermsForTenant(tenant: Address): Promise<TermsDto[]> {
  *  outcome. */
 export async function getOpenTermsForTenant(tenant: Address): Promise<TermsDto[]> {
   const reader = createReader();
+  const snapshot = await reader.getBlockNumber({ cacheTime: 0 });
   const [terms, outcomesRes] = await Promise.all([
-    getTermsForTenant(tenant),
+    getTermsForTenant(tenant, snapshot),
     walk(
       reader,
       [eq("project", str(PROJECT)), eq("entity_type", str("deposit_outcome"))],
       tenant,
+      snapshot,
     ),
   ]);
   const answered = new Set(
@@ -240,15 +251,16 @@ export async function listDirectory(): Promise<
   { address: string; name?: string; city?: string; termsCount: number }[]
 > {
   const reader = createReader();
+  const snapshot = await reader.getBlockNumber({ cacheTime: 0 });
   const [termsRes, profilesRes] = await Promise.all([
     walk(reader, [
       eq("project", str(PROJECT)),
       eq("entity_type", str("deposit_terms")),
-    ]),
+    ], undefined, snapshot),
     walk(reader, [
       eq("project", str(PROJECT)),
       eq("entity_type", str("landlord_profile")),
-    ]),
+    ], undefined, snapshot),
   ]);
   const profilesByCreator = new Map<string, ProfileDto>();
   for (const p of profilesRes.entities.map(toProfileDto)) {

@@ -99,6 +99,30 @@ That's by design, but it means "edit" UX is a replace-and-supersede flow, not a 
 edit this record") — honest framing of a real constraint. Worth calling out in docs as a
 data-modeling decision, not just an API flag.
 
+## 11. The public RPC anonymous-cost-limits bursts — `HTTP 429 ANON_COST_LIMITED`
+
+**Observed.** A Next.js page that fires several `arkiv_query` calls at once (our landlord
+history runs an outcomes walk + a terms walk in `Promise.all`, each preceded by its own
+`getBlockNumber`) started failing mid-render: `HttpRequestError: HTTP request failed.
+Status: 429 … Details: "ANON_COST_LIMITED"`. Worse: the failure was intermittent and
+load-dependent — a page that rendered fine in isolation broke under normal browsing.
+
+**Workaround.** Three layers, all in `clients.ts`/`queries.ts`:
+
+- `retryCount`/`retryDelay` on the viem `http()` transport — we had originally set
+  `retryCount: 0` which turned every transient 429 into a hard page error. viem retries
+  HTTP 429 natively; we just hadn't enabled it.
+- JSON-RPC `batch` on the same transport — Tiramisu accepts batched envelopes, so the
+  concurrent `Promise.all` reads collapse into ~1 HTTP request per page instead of 4–6.
+- Shared snapshots — `walk()` now accepts a caller-pinned block, so the two walks in a
+  history read share one `getBlockNumber` instead of paying for two. This also makes the
+  paired queries *consistent at the same block*, which they weren't before.
+
+**Fix suggestion.** Return `Retry-After` on 429 so clients can back off precisely, and
+document the anonymous cost budget (requests/sec? compute units?) — "ANON_COST_LIMITED"
+tells you that you paid too much, not what the budget is. A hosted-RPC-key story for
+production apps would close this entirely.
+
 ## What went smoothly (worth keeping)
 
 - `executeBatch` atomicity made the two-way-linked outcome+evidence pattern trivially safe.
