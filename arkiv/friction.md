@@ -101,11 +101,13 @@ data-modeling decision, not just an API flag.
 
 ## 11. The public RPC anonymous-cost-limits bursts — `HTTP 429 ANON_COST_LIMITED`
 
-**Observed.** A Next.js page that fires several `arkiv_query` calls at once (our landlord
+**Observed.** `HttpRequestError: HTTP request failed. Status: 429 … Details:
+"ANON_COST_LIMITED"` on a `safestay_v1` query against the public endpoint — caught while
+a second Arkiv dev project was running on the same machine, which is consistent with the
+limit being per-IP rather than per-app. Our page shape made us fragile to it: the landlord
 history runs an outcomes walk + a terms walk in `Promise.all`, each preceded by its own
-`getBlockNumber`) started failing mid-render: `HttpRequestError: HTTP request failed.
-Status: 429 … Details: "ANON_COST_LIMITED"`. Worse: the failure was intermittent and
-load-dependent — a page that rendered fine in isolation broke under normal browsing.
+`getBlockNumber` — 4–6 RPC calls per render, and we had `retryCount: 0`, so a transient
+limit became a hard render error.
 
 **Workaround.** Three layers, all in `clients.ts`/`queries.ts`:
 
