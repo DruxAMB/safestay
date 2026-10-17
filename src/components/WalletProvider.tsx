@@ -73,7 +73,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   const [walletId, setWalletId] = useState<string | null>(null);
 
   useEffect(() => {
-    setWalletId(selectedWalletUuid());
+    queueMicrotask(() => setWalletId(selectedWalletUuid()));
     return listenForWallets(() => setProviders(discoveredWallets()));
   }, []);
 

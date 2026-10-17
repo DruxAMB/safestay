@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState, useTransition } from "react";
 import { isAddress } from "viem";
 import type { Address } from "viem";
 import { useWallet } from "./WalletProvider";
+import { WalletPicker } from "./WalletPicker";
 import { OutcomeForm } from "./OutcomeForm";
 import { TermsForm } from "./TermsForm";
 import { Badge, Button, Card, Skeleton } from "./ui";
@@ -27,7 +28,8 @@ type MyTerms = Awaited<ReturnType<typeof browserMyTerms>>[number];
 /** The real signing path: connected wallet → sign as tenant or landlord.
  *  Not connected → this renders the demo panel instead (see record page). */
 export function WalletFlow() {
-  const { address, ready, connect, error, providers, walletId, select } = useWallet();
+  const { address, ready } = useWallet();
+  const [pickerOpen, setPickerOpen] = useState(false);
   const [role, setRole] = useState<"tenant" | "landlord">("tenant");
   const [myTerms, setMyTerms] = useState<MyTerms[] | null>(null);
   const [openTerms, setOpenTerms] = useState<TermsDto[] | null>(null);
@@ -74,35 +76,10 @@ export function WalletFlow() {
           Every entity you create is signed by <em>your</em> address — the creator provenance
           is the trust model.
         </p>
-        {providers.length > 1 && (
-          <div className="mt-3">
-            <label htmlFor="wallet-pick" className="text-xs font-medium text-muted-foreground">
-              Multiple wallets detected — choose which one signs
-            </label>
-            <select
-              id="wallet-pick"
-              value={walletId ?? ""}
-              onChange={(e) => select(e.target.value || null)}
-              className="mt-1 block h-10 w-full max-w-xs rounded-md border border-border bg-card px-2 text-sm"
-            >
-              <option value="">Browser default (window.ethereum)</option>
-              {providers.map((p) => (
-                <option key={p.info.uuid} value={p.info.uuid}>
-                  {p.info.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-        <Button
-          className="mt-4"
-          onClick={() => void connect(walletId ?? undefined).catch(() => {})}
-        >
+        <Button className="mt-4" onClick={() => setPickerOpen(true)}>
           Connect wallet to sign
         </Button>
-        {error && (
-          <p role="alert" className="mt-2 text-sm text-danger">{error}</p>
-        )}
+        <WalletPicker open={pickerOpen} onClose={() => setPickerOpen(false)} />
       </Card>
     );
   }
