@@ -65,9 +65,9 @@ export function EntityDossier({ entity, snapshot }: { entity: TermsDto; snapshot
   return (
     <div className="relative">
       {/* Orbiting annotations — xl only */}
-      <Annotation side="right" y="top-6" text="Creator = landlord wallet — only that key could sign these terms" />
-      <Annotation side="right" y="bottom-16" text={`Auto-expires at block ${entity.expiresAtBlock} — Entity Expiration, not our server`} />
-      <Annotation side="right" y="top-24" text="Names the tenant — an outcome verifies only if that wallet signed it" />
+      <Annotation side="right" y="top-10" text="Creator = landlord wallet — only that key could sign these terms" />
+      <Annotation side="right" y="bottom-8" text={`Auto-expires at block ${entity.expiresAtBlock} — Entity Expiration, not our server`} />
+      <Annotation side="right" y="top-32" text="Names the tenant — an outcome verifies only if that wallet signed it" />
 
       <div className="relative border border-foreground/40 bg-card">
         <RegistrationMarks />

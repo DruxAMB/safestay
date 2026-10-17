@@ -44,14 +44,14 @@ export default function Home() {
                 </div>
               </div>
             </div>
-            <div className="relative lg:h-[620px]">
+            <div className="relative lg:h-155">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/hero-building.png"
                 alt="Clay-render apartment tower — the glowing unit is a signed deposit record"
                 className="mx-auto w-full max-w-md lg:hidden"
               />
-              <div className="mt-6 lg:absolute lg:bottom-0 lg:left-0 lg:mt-0 lg:w-[315px]">
+              <div className="mt-6 lg:absolute lg:bottom-0 lg:left-0 lg:mt-0 lg:w-78.75">
                 <Suspense fallback={<DossierSkeleton />}>
                   <DossierSlot />
                 </Suspense>
