@@ -38,20 +38,20 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="flex min-h-full flex-col">
         <WalletProvider>
-        <header className="border-b border-border bg-card/80 backdrop-blur">
+        <header className="border-b border-border-inverse bg-surface-inverse text-text-inverse">
           <nav className="mx-auto flex h-14 max-w-5xl items-center gap-3 px-4 sm:gap-5 sm:px-6" aria-label="Main">
             <Link href="/" className="flex items-center gap-2 font-medium">
               <ShieldCheck size={20} className="text-primary" aria-hidden />
               SafeStay
             </Link>
             <div className="ml-auto flex items-center gap-0.5 text-sm">
-              <Link href="/feed" className="min-h-11 inline-flex items-center rounded-md px-2 sm:px-3 [@media(hover:hover)]:hover:bg-muted">
+              <Link href="/feed" className="min-h-11 inline-flex items-center rounded-md px-2 text-text-inverse-muted sm:px-3 [@media(hover:hover)]:hover:bg-white/5 [@media(hover:hover)]:hover:text-text-inverse">
                 Feed
               </Link>
-              <Link href="/record" className="min-h-11 inline-flex items-center rounded-md px-2 sm:px-3 [@media(hover:hover)]:hover:bg-muted">
+              <Link href="/record" className="min-h-11 inline-flex items-center rounded-md px-2 text-text-inverse-muted sm:px-3 [@media(hover:hover)]:hover:bg-white/5 [@media(hover:hover)]:hover:text-text-inverse">
                 Record
               </Link>
-              <Link href="/about" className="min-h-11 inline-flex items-center rounded-md px-2 sm:px-3 [@media(hover:hover)]:hover:bg-muted">
+              <Link href="/about" className="min-h-11 inline-flex items-center rounded-md px-2 text-text-inverse-muted sm:px-3 [@media(hover:hover)]:hover:bg-white/5 [@media(hover:hover)]:hover:text-text-inverse">
                 About
               </Link>
               <ConnectWallet />

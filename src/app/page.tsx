@@ -4,33 +4,36 @@ import { io } from "next/cache";
 import { LookupForm } from "@/components/LookupForm";
 import { listDirectory } from "@/lib/arkiv/queries";
 import { Skeleton } from "@/components/ui";
+import AnimatedContent from "@/components/AnimatedContent";
 import { ShieldCheck, FileSignature, Eye, Timer } from "lucide-react";
 
 export default function Home() {
   return (
     <div>
       {/* Hero — one scroll, straight into the tool. The lookup is the app. */}
-      <section className="mx-auto flex w-full max-w-5xl flex-col gap-5 px-4 py-14 sm:px-6 sm:py-24">
-        <p className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
-          For renters in India · powered by Arkiv
-        </p>
-        <h1 className="max-w-3xl text-5xl leading-[1.02] tracking-tight sm:text-6xl md:text-7xl">
-          Check a landlord’s deposit history before you pay.
-        </h1>
-        <p className="max-w-xl text-lg text-muted-foreground">
-          Every outcome is signed by a tenant’s wallet on Arkiv and linked back to terms the
-          landlord signed — a record no platform, landlord, or we can edit or delete.
-        </p>
-        <div className="mt-2 max-w-2xl">
-          <Suspense fallback={<DirectorySkeleton />}>
-            <DirectoryLookup />
-          </Suspense>
-        </div>
+      <section className="mx-auto w-full max-w-5xl px-4 py-14 sm:px-6 sm:py-24">
+        <AnimatedContent trigger="mount" distance={24} duration={0.7} stagger={0.08} className="flex flex-col gap-5">
+          <p className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
+            For renters in India · powered by Arkiv
+          </p>
+          <h1 className="max-w-3xl text-5xl leading-[1.02] tracking-tight sm:text-6xl md:text-7xl">
+            Check a landlord’s deposit history before you pay.
+          </h1>
+          <p className="max-w-xl text-lg text-muted-foreground">
+            Every outcome is signed by a tenant’s wallet on Arkiv and linked back to terms the
+            landlord signed — a record no platform, landlord, or we can edit or delete.
+          </p>
+          <div className="mt-2 max-w-2xl">
+            <Suspense fallback={<DirectorySkeleton />}>
+              <DirectoryLookup />
+            </Suspense>
+          </div>
+        </AnimatedContent>
       </section>
 
       {/* Obsidian band — how it works, ruled columns. */}
       <section className="bg-surface-inverse text-text-inverse" aria-label="How it works">
-        <div className="mx-auto w-full max-w-5xl px-4 py-14 sm:px-6 sm:py-20">
+        <AnimatedContent distance={24} duration={0.7} threshold={0.15} className="mx-auto w-full max-w-5xl px-4 py-14 sm:px-6 sm:py-20">
           <h2 className="text-sm font-medium uppercase tracking-wide text-text-inverse-muted">
             How it works
           </h2>
@@ -76,7 +79,7 @@ export default function Home() {
               <ShieldCheck size={16} aria-hidden className="text-primary" /> Watch the live ledger
             </Link>
           </div>
-        </div>
+        </AnimatedContent>
       </section>
     </div>
   );
