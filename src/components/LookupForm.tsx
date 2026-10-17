@@ -29,21 +29,21 @@ export function LookupForm({ directory, directoryNote }: {
   const entries = directory ?? [];
   const router = useRouter();
   const id = useId();
-  const [value, setValue] = useState("");
+  const [typed, setTyped] = useState("");
   const [error, setError] = useState<string | null>(null);
-  // A picked chip: selection already drove the specimen + building glow;
-  // the submit button's second stage navigates to the full ledger.
-  const [picked, setPicked] = useState<string | null>(null);
-  const { select } = useHeroSelection();
+  // Selection lives in hero context — chips and clicking a lit unit in the
+  // building both land here. While something is picked the input shows the
+  // picked address; the first keystroke clears it and the field is yours.
+  const { selected, select } = useHeroSelection();
+  const picked = selected;
+  const value = picked ?? typed;
 
   function go(addr: string) {
     router.push(`/landlord/${addr.trim()}`);
   }
 
   function pick(l: DirectoryEntry) {
-    setValue(l.address);
     setError(null);
-    setPicked(l.address);
     select(l.address);
   }
 
@@ -85,9 +85,9 @@ export function LookupForm({ directory, directoryNote }: {
             id={id}
             value={value}
             onChange={(e) => {
-              setValue(e.target.value);
+              setTyped(e.target.value);
               if (error) setError(null);
-              if (picked) { setPicked(null); select(null); }
+              if (picked) select(null);
             }}
             placeholder="0x… or a name like “Sunrise PG”"
             inputMode="text"

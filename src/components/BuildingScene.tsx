@@ -3,6 +3,8 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { useHeroSelection } from "./HeroSelection";
+import { inr, shortAddr, shortKey } from "@/lib/format";
+import type { TermsDto } from "@/lib/arkiv/schema";
 
 const WALL = 0xf5f0e6; // warm paper-cream facade
 const SLAB = 0x9a9184; // protruding floor ledges — distinctly darker than walls
@@ -43,6 +45,41 @@ const hashAddr = (a: string) => [...a].reduce((s, c) => s + c.charCodeAt(0), 0);
  *  stats strip and out from behind the dossier card. */
 const floorFor = (addr: string | null) => (addr == null ? GLOW_FLOOR : 2 + (hashAddr(addr) % 3));
 
+// Wing footprints in building-local space — shared by the scene builder and
+// the unit-slot map. Wing A sits forward; wing B's front is recessed 0.9.
+const WING_A = { w: 3.1, d: 2.0, x: -1.7, z: 0.55 } as const;
+const WING_B = { w: 3.3, d: 2.4, x: 1.55, z: -0.85 } as const;
+const FLOORS = 5;
+
+/** Window slots that can hold a lit unit marker — every front/right/end
+ *  window position, skipping the two balcony spots. */
+const SLOTS: { x: number; y: number; z: number; ry: number }[] = (() => {
+  const s: { x: number; y: number; z: number; ry: number }[] = [];
+  for (let f = 0; f < FLOORS; f++) {
+    const y = floorYAt(f);
+    for (const c of [-0.95, 0, 0.95])
+      s.push({ x: WING_A.x + c, y, z: WING_A.z + WING_A.d / 2 + 0.08, ry: 0 });
+    for (const cz of [0.35, -0.45])
+      if (!(f === 3 && cz === -0.45))
+        s.push({ x: WING_A.x + WING_A.w / 2 + 0.08, y, z: WING_A.z + cz, ry: Math.PI / 2 });
+    for (const c of [-0.9, 0.15, 1.05])
+      s.push({ x: WING_B.x + c, y, z: WING_B.z + WING_B.d / 2 + 0.13, ry: 0 });
+    for (const cz of [0.6, -0.4])
+      if (!((f === 4 && cz === 0.6) || (f === 3 && cz === -0.4)))
+        s.push({ x: WING_B.x + WING_B.w / 2 + 0.08, y, z: WING_B.z + cz, ry: Math.PI / 2 });
+  }
+  return s;
+})();
+
+const UNIT_GEO = new THREE.PlaneGeometry(0.5, 0.62);
+const unitMat = () =>
+  new THREE.MeshBasicMaterial({
+    color: 0xecff5e,
+    transparent: true,
+    opacity: 0,
+    side: THREE.DoubleSide,
+  });
+
 type World = {
   glow: THREE.Group;
   lock: THREE.Group;
@@ -52,11 +89,65 @@ type World = {
   renderer: THREE.WebGLRenderer;
   scene: THREE.Scene;
   camera: THREE.OrthographicCamera;
+  units: THREE.Group;
+  hover: THREE.Mesh | null;
+  tip: HTMLDivElement | null;
+  now: () => number;
   reduce: boolean;
   targetGlowY: number;
   dragOff: number;
   verifyAt: number;
 };
+
+/** One lit pane per real deposit_terms entity — windows are the ledger.
+ *  Only adds markers for entity keys not already shown, so live WS
+ *  arrivals ignite individually instead of rebuilding the layer. */
+function syncUnits(w: World, terms: TermsDto[]) {
+  const units = w.units;
+  const used = (units.userData.used ??= new Set<number>()) as Set<number>;
+  const have = new Set(
+    units.children.map((c) => ((c.userData.key as string) ?? "").toLowerCase()),
+  );
+  const fresh = terms.filter((t) => t.entityKey && !have.has(t.entityKey.toLowerCase()));
+  fresh.forEach((t, i) => {
+    let si = (units.children.length * 7 + 3) % SLOTS.length;
+    while (used.has(si)) si = (si + 1) % SLOTS.length;
+    used.add(si);
+    const s = SLOTS[si];
+    const m = new THREE.Mesh(UNIT_GEO, unitMat());
+    m.position.set(s.x, s.y, s.z);
+    m.rotation.y = s.ry;
+    m.userData = {
+      key: t.entityKey,
+      creator: t.creator.toLowerCase(),
+      term: t,
+      bornAt: w.now() + i * 0.09, // staggered ignition on first paint
+      cur: 0,
+      target: 0.16,
+      hovered: false,
+    };
+    units.add(m);
+    if (w.reduce) {
+      (m.material as THREE.MeshBasicMaterial).opacity = 0.16;
+      m.userData.cur = 0.16;
+    }
+  });
+}
+
+/** Selection → per-unit brightness: the picked landlord's records burn,
+ *  the rest dim so the ownership map reads at a glance. */
+function applySel(w: World, selected: string | null) {
+  const sel = selected?.toLowerCase() ?? null;
+  for (const u of w.units.children) {
+    const ud = u.userData as { creator: string; target: number; cur: number };
+    ud.target = ud.creator === sel ? 0.92 : sel ? 0.08 : 0.16;
+    if (w.reduce) {
+      ud.cur = ud.target;
+      ((u as THREE.Mesh).material as THREE.MeshBasicMaterial).opacity = ud.target;
+      u.scale.setScalar(ud.creator === sel ? 1.08 : 1);
+    }
+  }
+}
 
 /** Tall narrow window: dark inset panel + center mullion → two panes. */
 function windowUnit(w = 0.26, h = 0.62) {
@@ -223,14 +314,29 @@ function blobShadow() {
  */
 export function BuildingScene({ className = "" }: { className?: string }) {
   const mountRef = useRef<HTMLDivElement>(null);
-  const { selected } = useHeroSelection();
+  const tipRef = useRef<HTMLDivElement>(null);
+  const { selected, select, terms, live } = useHeroSelection();
   const world = useRef<World | null>(null);
-
-  // Directory selection rides the glowing floor to that landlord's unit.
+  // Latest values readable inside the mount-once effect below.
+  const stRef = useRef<{ terms: TermsDto[]; selected: string | null }>({
+    terms: [],
+    selected: null,
+  });
+  const selectRef = useRef(select);
   useEffect(() => {
+    selectRef.current = select;
+  });
+
+  // Selection rides the glow floor + recolours units; new terms (snapshot
+  // registration or live WS arrivals) ignite fresh unit markers.
+  useEffect(() => {
+    const all = [...terms, ...live];
+    stRef.current = { terms: all, selected };
     const w = world.current;
     if (!w) return;
     w.targetGlowY = floorYAt(floorFor(selected));
+    syncUnits(w, all);
+    applySel(w, selected);
     if (w.reduce) {
       w.glow.position.y = w.targetGlowY;
       w.lock.position.y = w.targetGlowY + 0.3;
@@ -240,7 +346,7 @@ export function BuildingScene({ className = "" }: { className?: string }) {
       pts.needsUpdate = true;
       w.renderer.render(w.scene, w.camera);
     }
-  }, [selected]);
+  }, [terms, live, selected]);
 
   useEffect(() => {
     const mount = mountRef.current;
@@ -273,10 +379,10 @@ export function BuildingScene({ className = "" }: { className?: string }) {
     scene.add(fill);
 
     const building = new THREE.Group();
-    const FLOORS = 5;
+    const units = new THREE.Group(); // lit unit markers — one per real entity
 
     // Wing A — left, sits FORWARD (front face closer to camera)
-    const aW = 3.1, aD = 2.0, aX = -1.7, aZ = 0.55;
+    const { w: aW, d: aD, x: aX, z: aZ } = WING_A;
     const wingA = wing({
       w: aW, d: aD, floors: FLOORS,
       frontCols: [-0.95, 0, 0.95],
@@ -286,7 +392,7 @@ export function BuildingScene({ className = "" }: { className?: string }) {
     wingA.position.set(aX, 0, aZ);
 
     // Wing B — right, RECESSED 0.9 behind wing A's front plane; one floor taller
-    const bW = 3.3, bD = 2.4, bX = 1.55, bZ = -0.85;
+    const { w: bW, d: bD, x: bX, z: bZ } = WING_B;
     const wingB = wing({
       w: bW, d: bD, floors: FLOORS,
       frontCols: [-0.9, 0.15, 1.05],
@@ -297,7 +403,7 @@ export function BuildingScene({ className = "" }: { className?: string }) {
       ],
     });
     wingB.position.set(bX, 0, bZ);
-    building.add(wingA, wingB);
+    building.add(wingA, wingB, units);
 
     // ---- Glowing unit on wing B's recessed front face ---------------------
     const glow = new THREE.Group();
@@ -348,12 +454,17 @@ export function BuildingScene({ className = "" }: { className?: string }) {
     scene.add(building);
     scene.add(blobShadow());
 
-    const w = {
+    const clock = new THREE.Clock();
+    const w: World = {
       glow, lock, tetherGeo: lineGeo, tetherMat, spill,
-      renderer, scene, camera, reduce,
-      targetGlowY: glowY, dragOff: 0, verifyAt: -10,
+      renderer, scene, camera, units,
+      hover: null, tip: tipRef.current, now: () => clock.getElapsedTime(),
+      reduce, targetGlowY: glowY, dragOff: 0, verifyAt: -10,
     };
     world.current = w;
+    // Snapshot terms may already be registered when the scene mounts.
+    syncUnits(w, stRef.current.terms);
+    applySel(w, stRef.current.selected);
 
     // Drag-to-rotate (empty hero space drags the tower) + padlock click-verify
     const canvas = renderer.domElement;
@@ -373,23 +484,85 @@ export function BuildingScene({ className = "" }: { className?: string }) {
       w.dragOff = Math.max(-0.55, Math.min(0.55, w.dragOff + (e.clientX - lastX) * 0.004));
       lastX = e.clientX;
     };
+    const rc = new THREE.Raycaster();
+    const ndc = new THREE.Vector2();
+    const v3 = new THREE.Vector3();
+    const paint = () => renderer.render(scene, camera);
+    const positionTip = () => {
+      const tip = w.tip;
+      if (!w.hover || !tip) return;
+      v3.setFromMatrixPosition(w.hover.matrixWorld).project(camera);
+      tip.style.transform = `translate(${
+        ((v3.x + 1) / 2) * mount.clientWidth + 12
+      }px, ${((-v3.y + 1) / 2) * mount.clientHeight - 40}px)`;
+    };
+    const clearHover = () => {
+      if (w.hover) w.hover.userData.hovered = false;
+      w.hover = null;
+      if (w.tip) w.tip.style.display = "none";
+      canvas.style.cursor = "grab";
+      if (reduce) paint();
+    };
     const onUp = (e: PointerEvent) => {
       if (!dragging) return;
       dragging = false;
       canvas.style.cursor = "grab";
       if (Math.abs(e.clientX - downX) < 6 && Math.abs(e.clientY - downY) < 6) {
         const r = canvas.getBoundingClientRect();
-        const ndc = new THREE.Vector2(
+        ndc.set(
           ((e.clientX - r.left) / r.width) * 2 - 1,
           -((e.clientY - r.top) / r.height) * 2 + 1,
         );
-        const rc = new THREE.Raycaster();
         rc.setFromCamera(ndc, camera);
-        if (rc.intersectObject(lock, true).length) w.verifyAt = clock.getElapsedTime();
+        const hitUnit = rc.intersectObjects(units.children, false)[0];
+        if (hitUnit) {
+          // Clicking a lit unit selects its landlord — same as a chip.
+          const t = hitUnit.object.userData.term as TermsDto;
+          if (t?.creator) selectRef.current(t.creator);
+        } else if (rc.intersectObject(lock, true).length) {
+          w.verifyAt = clock.getElapsedTime();
+        }
       }
+    };
+    // Hover a lit unit → tooltip with the real entity's fields; the padlock
+    // advertises its click by sharing the pointer cursor.
+    const onHover = (e: PointerEvent) => {
+      if (dragging) return;
+      const r = canvas.getBoundingClientRect();
+      ndc.set(
+        ((e.clientX - r.left) / r.width) * 2 - 1,
+        -((e.clientY - r.top) / r.height) * 2 + 1,
+      );
+      rc.setFromCamera(ndc, camera);
+      const hit =
+        (rc.intersectObjects(units.children, false)[0]?.object as
+          | THREE.Mesh
+          | undefined) ?? null;
+      const overLock = !hit && rc.intersectObject(lock, true).length > 0;
+      if (hit !== w.hover) {
+        if (w.hover) w.hover.userData.hovered = false;
+        w.hover = hit;
+        const tip = w.tip;
+        if (hit && tip) {
+          hit.userData.hovered = true;
+          const t = hit.userData.term as TermsDto;
+          tip.children[0].textContent = `entity ${shortKey(t.entityKey)}`;
+          tip.children[1].textContent = `${inr(t.depositInr)} · ${
+            t.city || "—"
+          } · signed by ${shortAddr(t.creator)}`;
+          tip.style.display = "block";
+          positionTip();
+        } else if (tip) {
+          tip.style.display = "none";
+        }
+        if (reduce) paint();
+      }
+      canvas.style.cursor = hit || overLock ? "pointer" : "grab";
     };
     canvas.addEventListener("pointerdown", onDown);
     canvas.addEventListener("pointermove", onDrag);
+    canvas.addEventListener("pointermove", onHover);
+    canvas.addEventListener("pointerleave", clearHover);
     window.addEventListener("pointerup", onUp);
 
     const size = () => {
@@ -413,7 +586,6 @@ export function BuildingScene({ className = "" }: { className?: string }) {
     if (!reduce) window.addEventListener("pointermove", onMove);
 
     let raf = 0;
-    const clock = new THREE.Clock();
     const frame = () => {
       const t = clock.getElapsedTime();
       // The glow rides to the selected landlord's floor.
@@ -434,6 +606,23 @@ export function BuildingScene({ className = "" }: { className?: string }) {
       pts.setXYZ(0, glowX + glowW / 2 + 0.05, gy + 0.15, frontB + 0.06);
       pts.setXYZ(1, lock.position.x, lock.position.y, lock.position.z);
       pts.needsUpdate = true;
+      // Unit markers — ignite in, burn for the selected landlord, pop on
+      // hover. Each lit pane is one real entity on Arkiv.
+      for (const u of units.children) {
+        const ud = u.userData as {
+          bornAt: number; cur: number; target: number; hovered?: boolean;
+        };
+        const born = Math.max(0, Math.min((t - ud.bornAt) / 0.55, 1));
+        const ease = 1 - Math.pow(1 - born, 3);
+        const want = ud.target * ease + (born < 1 ? (1 - born) * 0.35 : 0);
+        ud.cur += (want - ud.cur) * 0.18;
+        ((u as THREE.Mesh).material as THREE.MeshBasicMaterial).opacity =
+          Math.min(1, ud.cur);
+        u.scale.setScalar(
+          (ud.hovered ? 1.2 : ud.target > 0.9 ? 1.08 : 1) * (0.55 + 0.45 * ease),
+        );
+      }
+      if (w.hover) positionTip(); // the tower drifts — track the marker
       renderer.render(scene, camera);
       raf = requestAnimationFrame(frame);
     };
@@ -449,6 +638,8 @@ export function BuildingScene({ className = "" }: { className?: string }) {
       window.removeEventListener("pointerup", onUp);
       canvas.removeEventListener("pointerdown", onDown);
       canvas.removeEventListener("pointermove", onDrag);
+      canvas.removeEventListener("pointermove", onHover);
+      canvas.removeEventListener("pointerleave", clearHover);
       ro.disconnect();
       scene.traverse((o) => {
         if (o instanceof THREE.Mesh) {
@@ -466,5 +657,15 @@ export function BuildingScene({ className = "" }: { className?: string }) {
     };
   }, []);
 
-  return <div ref={mountRef} aria-hidden className={`pointer-events-none absolute inset-0 ${className}`} />;
+  return (
+    <div ref={mountRef} aria-hidden className={`pointer-events-none absolute inset-0 ${className}`}>
+      <div
+        ref={tipRef}
+        className="pointer-events-none absolute left-0 top-0 z-10 hidden whitespace-nowrap border border-foreground/40 bg-card px-2 py-1 font-mono text-[10px] leading-snug text-foreground"
+      >
+        <div className="text-muted-foreground" />
+        <div />
+      </div>
+    </div>
+  );
 }

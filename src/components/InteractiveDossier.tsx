@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { EntityDossier } from "./EntityDossier";
@@ -39,7 +40,11 @@ export function InteractiveDossier({
   terms: TermsDto[];
   snapshot: string;
 }) {
-  const { selected } = useHeroSelection();
+  const { selected, live, registerTerms } = useHeroSelection();
+  // Hand the snapshot terms to the scene — each one lights a unit marker.
+  useEffect(() => {
+    registerTerms(terms);
+  }, [terms, registerTerms]);
   const shown =
     (selected
       ? terms
@@ -57,6 +62,12 @@ export function InteractiveDossier({
         >
           View full history — {shortAddr(selected)} <ArrowRight size={12} aria-hidden />
         </Link>
+      )}
+      {live.length > 0 && (
+        <p className="mt-2 flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+          <span aria-hidden className="inline-block h-1.5 w-1.5 rounded-full bg-primary" />
+          {live.length} new {live.length === 1 ? "record" : "records"} on-chain since load
+        </p>
       )}
     </div>
   );

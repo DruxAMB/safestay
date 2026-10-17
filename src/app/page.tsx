@@ -21,7 +21,7 @@ export default function Home() {
             column, so the building silhouette can't clip at column edges.
             pointer-events-none inside; content z-10 stays interactive. */}
         <BuildingScene className="hidden lg:block" />
-        <div className="relative z-10 mx-auto w-full max-w-6xl px-4 py-14 sm:px-6 sm:py-24">
+        <div className="pointer-events-none relative z-10 mx-auto w-full max-w-6xl px-4 py-14 sm:px-6 sm:py-24">
           <AnimatedContent trigger="mount" distance={24} duration={0.7} stagger={0.08} className="grid gap-10 lg:grid-cols-[1.1fr_1fr] lg:gap-16">
             <div className="flex flex-col gap-5">
               <p className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
@@ -34,7 +34,7 @@ export default function Home() {
                 Every outcome is signed by a tenant’s wallet on Arkiv and linked back to terms the
                 landlord signed — a record no platform, landlord, or we can edit or delete.
               </p>
-              <div className="relative mt-2 border border-foreground/40 bg-card">
+              <div className="pointer-events-auto relative mt-2 border border-foreground/40 bg-card">
                 <CornerMarks />
                 <p className="border-b border-border px-4 py-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
                   Query the ledger — keyless, no signup
@@ -53,7 +53,7 @@ export default function Home() {
                 alt="Clay-render apartment tower — the glowing unit is a signed deposit record"
                 className="mx-auto lg:hidden"
               />
-              <div className="mt-6 lg:absolute lg:top-0 lg:left-0 lg:mt-0 lg:w-78.75">
+              <div className="pointer-events-auto mt-6 lg:absolute lg:top-0 lg:left-0 lg:mt-0 lg:w-78.75">
                 <Suspense fallback={<DossierSkeleton />}>
                   <DossierSlot />
                 </Suspense>
