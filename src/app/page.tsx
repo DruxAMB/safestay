@@ -15,6 +15,10 @@ export default function Home() {
       {/* Hero — evidence dossier: the console is the tool, the specimen is
           a real on-chain entity, every number is live. */}
       <section className="bg-stipple relative overflow-hidden">
+        {/* Full-bleed WebGL canvas — mounted on the section, not the right
+            column, so the building silhouette can't clip at column edges.
+            pointer-events-none inside; content z-10 stays interactive. */}
+        <BuildingScene className="hidden lg:block" />
         <div className="relative z-10 mx-auto w-full max-w-6xl px-4 py-14 sm:px-6 sm:py-24">
           <AnimatedContent trigger="mount" distance={24} duration={0.7} stagger={0.08} className="grid gap-10 lg:grid-cols-[1.1fr_1fr] lg:gap-16">
             <div className="flex flex-col gap-5">
@@ -47,7 +51,6 @@ export default function Home() {
                 alt="Clay-render apartment tower — the glowing unit is a signed deposit record"
                 className="mx-auto w-full max-w-md lg:hidden"
               />
-              <BuildingScene className="hidden lg:block" />
               <div className="mt-6 lg:absolute lg:bottom-0 lg:left-0 lg:mt-0 lg:w-[315px]">
                 <Suspense fallback={<DossierSkeleton />}>
                   <DossierSlot />

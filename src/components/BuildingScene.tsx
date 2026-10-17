@@ -301,9 +301,11 @@ export function BuildingScene({ className = "" }: { className?: string }) {
     // ---- Base plate --------------------------------------------------------
     building.add(box(7.6, 0.12, 5.4, BASE, 0, 0.06, -0.2));
 
-    // Shift right-of-center: the dossier overlaps the lower-left corner.
-    building.position.x = 1.45;
-    building.position.y = -0.15;
+    // Anchor lower-right of the full-bleed canvas: the dossier overlaps its
+    // lower-left corner; headline column stays clear.
+    building.scale.setScalar(0.7);
+    building.position.x = 3.2;
+    building.position.y = 0.3;
     scene.add(building);
     scene.add(blobShadow());
 
