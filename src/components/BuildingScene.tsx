@@ -96,7 +96,7 @@ type World = {
   towerUnits: THREE.Group;
   towerSlots: UnitSlot[];
   activeModel: "lb" | "tw";
-  popT: number;
+  swap: { phase: "idle" | "out" | "in"; t0: number; from: "lb" | "tw"; to: "lb" | "tw" };
   applyModel?: (m: "lb" | "tw") => void;
   hover: THREE.Mesh | null;
   tip: HTMLDivElement | null;
@@ -497,7 +497,7 @@ export function BuildingScene({ className = "" }: { className?: string }) {
     mount.appendChild(renderer.domElement);
 
     const scene = new THREE.Scene();
-    let frustumCur = 4.4; // tower model needs a taller fit
+    const frustumCur = 4.4; // both models share one frame
     const camera = new THREE.OrthographicCamera(-frustumCur, frustumCur, frustumCur, -frustumCur, 0.1, 100);
     camera.position.set(11.5, 8.6, 9.2); // corner-on, favoring the right side like the ref
     camera.lookAt(0.4, 2.6, -0.3);
@@ -602,7 +602,8 @@ export function BuildingScene({ className = "" }: { className?: string }) {
       glow, lock, tetherGeo: lineGeo, tetherMat, spill,
       renderer, scene, camera, units,
       towerUnits: tower.units, towerSlots: tower.slots,
-      activeModel: "lb", popT: -1,
+      activeModel: "lb",
+      swap: { phase: "idle", t0: 0, from: "lb", to: "lb" },
       hover: null, tip: tipRef.current, now: () => clock.getElapsedTime(),
       reduce, targetGlowY: glowY, dragOff: 0, verifyAt: -10,
     };
@@ -728,22 +729,34 @@ export function BuildingScene({ className = "" }: { className?: string }) {
       camera.updateProjectionMatrix();
     };
     size();
-    // Model swap — visibility, camera fit, pop animation. Called from the
-    // React selection effect via the world object.
+    // Model swap — demolish the current building into its plinth, then the
+    // incoming one rises out of the ground (scaleY collapse / rise). Called
+    // from the React selection effect via the world object. Re-clicks during
+    // a transition retarget cleanly: the model on screen becomes `from`.
+    const baseOf = (m: "lb" | "tw") => (m === "tw" ? 1.25 : 1);
+    const groupOf = (m: "lb" | "tw") => (m === "tw" ? tower.group : lblock);
     w.applyModel = (m) => {
-      if (w.activeModel === m) return;
+      if (w.swap.to === m && w.swap.phase !== "idle") return; // already en route
+      if (w.swap.phase === "idle" && w.activeModel === m) return;
+      const shown =
+        w.swap.phase === "out" ? w.swap.from
+        : w.swap.phase === "in" ? w.swap.to
+        : w.activeModel;
       w.activeModel = m;
-      lblock.visible = m === "lb";
-      tower.group.visible = m === "tw";
-      frustumCur = 4.4; // both models share the frame now
-      size();
-      camera.lookAt(0.4, 2.6, -0.3);
       if (reduce) {
-        lblock.scale.setScalar(1);
-        tower.group.scale.setScalar(1.25);
+        groupOf("lb").visible = m === "lb";
+        groupOf("tw").visible = m === "tw";
+        groupOf(m).scale.setScalar(baseOf(m));
+        w.swap = { phase: "idle", t0: 0, from: m, to: m };
         paint();
+        return;
+      }
+      if (shown === m) {
+        // Toggled back to the on-screen model — let it rise from flat.
+        w.swap = { phase: "in", t0: w.now(), from: m, to: m };
       } else {
-        w.popT = w.now();
+        groupOf(m).visible = false; // hidden until the rise phase starts
+        w.swap = { phase: "out", t0: w.now(), from: shown, to: m };
       }
     };
     w.applyModel(modelOf(stRef.current.selected)); // selection may predate mount
@@ -791,16 +804,33 @@ export function BuildingScene({ className = "" }: { className?: string }) {
       pts.setXYZ(0, glowX + glowW / 2 + 0.05, gy + 0.15, frontB + 0.06);
       pts.setXYZ(1, lock.position.x, lock.position.y, lock.position.z);
       pts.needsUpdate = true;
-      // Model swap pop — the incoming model scales in over ~0.35s
-      if (w.popT >= 0) {
-        const pe = Math.min(1, (t - w.popT) / 0.35);
-        const es = 1 - Math.pow(1 - pe, 3);
-        const g = tw ? tower.group : lblock;
-        const base = tw ? 1.25 : 1;
-        g.scale.setScalar(base * (0.86 + 0.14 * es));
-        if (pe >= 1) {
-          g.scale.setScalar(base);
-          w.popT = -1;
+      // Model swap — demolish: accelerating squash into the plinth with a
+      // slight xz swell; construct: the new model rises out of the ground,
+      // scaleY overshooting with a back ease. Floors appear bottom-up.
+      if (w.swap.phase === "out") {
+        const g = groupOf(w.swap.from);
+        const p = Math.min(1, (t - w.swap.t0) / 0.26);
+        const b = baseOf(w.swap.from);
+        g.scale.set(b * (1 + 0.12 * p), b * (1 - p * p), b * (1 + 0.12 * p));
+        if (p >= 1) {
+          g.visible = false;
+          g.scale.setScalar(b);
+          const into = groupOf(w.swap.to);
+          into.visible = true;
+          into.scale.set(baseOf(w.swap.to), 0.001, baseOf(w.swap.to));
+          w.swap.phase = "in";
+          w.swap.t0 = t;
+        }
+      } else if (w.swap.phase === "in") {
+        const g = groupOf(w.swap.to);
+        const p = Math.min(1, (t - w.swap.t0) / 0.55);
+        const b = baseOf(w.swap.to);
+        const ey = 1 + 2.7 * Math.pow(p - 1, 3) + 1.7 * Math.pow(p - 1, 2); // back.out
+        const exz = 1 - 0.06 * Math.sin(Math.PI * p);
+        g.scale.set(b * exz, b * Math.max(0.001, ey), b * exz);
+        if (p >= 1) {
+          g.scale.setScalar(b);
+          w.swap.phase = "idle";
         }
       }
       // Unit markers — ignite in, burn for the selected landlord, pop on
