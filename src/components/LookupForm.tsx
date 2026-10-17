@@ -5,6 +5,7 @@ import { useState, useId } from "react";
 import { ArrowRight, Search } from "lucide-react";
 import { Button, Input, Label } from "@/components/ui";
 import { shortAddr } from "@/lib/format";
+import { TOWER_LANDLORD } from "@/lib/arkiv/config";
 import { useHeroSelection } from "./HeroSelection";
 
 const ADDR_RE = /^0x[0-9a-fA-F]{40}$/;
@@ -126,6 +127,12 @@ export function LookupForm({ directory, directoryNote }: {
                 : "border-border bg-card [@media(hover:hover)]:hover:bg-muted"
             }`}
           >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={l.address.toLowerCase() === TOWER_LANDLORD ? "/hero-tower.png" : "/hero-building.png"}
+              alt="" aria-hidden
+              className="size-6 shrink-0 rounded-full border border-border object-cover"
+            />
             <span className="font-medium">{l.name ?? shortAddr(l.address)}</span>
             <span className="font-mono text-xs text-muted-foreground">
               {l.name ? shortAddr(l.address) : `${l.termsCount} terms`}
