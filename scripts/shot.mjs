@@ -23,7 +23,7 @@ page.on("console", (m) => {
 });
 page.on("pageerror", (e) => consoleMsgs.push(`pageerror: ${e.message}`));
 
-await page.goto(`http://localhost:3000${path}`, { waitUntil: "networkidle2", timeout: 45000 });
+await page.goto(`http://localhost:${process.env.SHOT_PORT || 3001}${path}`, { waitUntil: "networkidle2", timeout: 45000 });
 await new Promise((r) => setTimeout(r, 1200));
 
 const probe = await page.evaluate(() => {

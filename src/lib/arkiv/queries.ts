@@ -262,15 +262,22 @@ export async function listDirectory(): Promise<
       eq("entity_type", str("landlord_profile")),
     ], undefined, snapshot),
   ]);
+  return buildDirectory(termsRes.entities, profilesRes.entities);
+}
+
+function buildDirectory(
+  termsEntities: Entity[],
+  profileEntities: Entity[],
+): { address: string; name?: string; city?: string; termsCount: number }[] {
   const profilesByCreator = new Map<string, ProfileDto>();
-  for (const p of profilesRes.entities.map(toProfileDto)) {
+  for (const p of profileEntities.map(toProfileDto)) {
     // latest profile wins — profiles are replace-not-edit by design
     if (!profilesByCreator.has(p.creator.toLowerCase())) {
       profilesByCreator.set(p.creator.toLowerCase(), p);
     }
   }
   const counts = new Map<string, number>();
-  for (const t of termsRes.entities) {
+  for (const t of termsEntities) {
     const c = (t.creator as string).toLowerCase();
     counts.set(c, (counts.get(c) ?? 0) + 1);
   }
@@ -278,7 +285,7 @@ export async function listDirectory(): Promise<
     .map(([addrLc, termsCount]) => {
       const p = profilesByCreator.get(addrLc);
       return {
-        address: termsRes.entities.find(
+        address: termsEntities.find(
           (t) => (t.creator as string).toLowerCase() === addrLc,
         )!.creator as string,
         name: p?.name || undefined,
@@ -287,4 +294,63 @@ export async function listDirectory(): Promise<
       };
     })
     .sort((a, b) => b.termsCount - a.termsCount);
+}
+
+export type HeroData = {
+  directory: { address: string; name?: string; city?: string; termsCount: number }[];
+  termsCount: number;
+  outcomesCount: number;
+  verifiedCount: number;
+  featured: TermsDto | null;
+  snapshot: string;
+};
+
+/** One-shot hero payload: directory + live counters + the newest real
+ *  `deposit_terms` entity rendered as the dossier specimen, plus the count
+ *  of outcomes that pass the two-way-link verification — all from one block
+ *  snapshot, all real chain data. */
+export async function getHeroData(): Promise<HeroData> {
+  const reader = createReader();
+  const snapshot = await reader.getBlockNumber({ cacheTime: 0 });
+  const [termsRes, profilesRes, outcomesRes] = await Promise.all([
+    walk(reader, [
+      eq("project", str(PROJECT)),
+      eq("entity_type", str("deposit_terms")),
+    ], undefined, snapshot),
+    walk(reader, [
+      eq("project", str(PROJECT)),
+      eq("entity_type", str("landlord_profile")),
+    ], undefined, snapshot),
+    walk(reader, [
+      eq("project", str(PROJECT)),
+      eq("entity_type", str("deposit_outcome")),
+    ], undefined, snapshot),
+  ]);
+  const terms = termsRes.entities.map(toTermsDto);
+  const outcomes = outcomesRes.entities.map((e) =>
+    toOutcomeDto(e, /* verified recomputed below */ false, false),
+  );
+  const termsByKey = new Map(terms.map((t) => [t.entityKey.toLowerCase(), t]));
+  const verifiedCount = outcomes.reduce((n, o) => {
+    const t = o.termsKey ? termsByKey.get(o.termsKey.toLowerCase()) : undefined;
+    if (!t) return n;
+    return isAddressEqual(t.creator as Address, o.landlord as Address) &&
+      isAddressEqual(t.tenant as Address, o.creator as Address)
+      ? n + 1
+      : n;
+  }, 0);
+  const featured =
+    terms.reduce<TermsDto | null>(
+      (best, t) =>
+        !best || BigInt(t.createdAtMs) > BigInt(best.createdAtMs) ? t : best,
+      null,
+    ) ?? null;
+  return {
+    directory: buildDirectory(termsRes.entities, profilesRes.entities),
+    termsCount: terms.length,
+    outcomesCount: outcomes.length,
+    verifiedCount,
+    featured,
+    snapshot: snapshot.toString(),
+  };
 }

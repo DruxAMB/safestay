@@ -1,8 +1,9 @@
-import { Suspense } from "react";
+import { Suspense, cache } from "react";
 import Link from "next/link";
 import { io } from "next/cache";
-import { LookupForm, type DirectoryEntry } from "@/components/LookupForm";
-import { listDirectory } from "@/lib/arkiv/queries";
+import { LookupForm } from "@/components/LookupForm";
+import { EntityDossier } from "@/components/EntityDossier";
+import { getHeroData, type HeroData } from "@/lib/arkiv/queries";
 import { Skeleton } from "@/components/ui";
 import AnimatedContent from "@/components/AnimatedContent";
 import { ShieldCheck, FileSignature, Eye, Timer } from "lucide-react";
@@ -10,26 +11,43 @@ import { ShieldCheck, FileSignature, Eye, Timer } from "lucide-react";
 export default function Home() {
   return (
     <div>
-      {/* Hero — one scroll, straight into the tool. The lookup is the app. */}
+      {/* Hero — evidence dossier: the console is the tool, the specimen is
+          a real on-chain entity, every number is live. */}
       <section className="bg-stipple">
         <div className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-6 sm:py-24">
-        <AnimatedContent trigger="mount" distance={24} duration={0.7} stagger={0.08} className="flex flex-col gap-5">
-          <p className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
-            For renters in India · powered by Arkiv
-          </p>
-          <h1 className="max-w-3xl text-4xl leading-[1.02] tracking-tight sm:text-5xl md:text-6xl">
-            Check a landlord’s deposit history before you pay.
-          </h1>
-          <p className="max-w-xl text-lg text-muted-foreground">
-            Every outcome is signed by a tenant’s wallet on Arkiv and linked back to terms the
-            landlord signed — a record no platform, landlord, or we can edit or delete.
-          </p>
-          <div className="mt-2 max-w-2xl">
-            <Suspense fallback={<DirectorySkeleton />}>
-              <DirectoryLookup />
-            </Suspense>
-          </div>
-        </AnimatedContent>
+          <AnimatedContent trigger="mount" distance={24} duration={0.7} stagger={0.08} className="grid gap-10 lg:grid-cols-[1.1fr_1fr] lg:gap-16">
+            <div className="flex flex-col gap-5">
+              <p className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
+                For renters in India · powered by Arkiv
+              </p>
+              <h1 className="text-4xl leading-[1.02] tracking-tight sm:text-5xl md:text-6xl">
+                Check a landlord’s deposit history before you pay.
+              </h1>
+              <p className="max-w-xl text-lg text-muted-foreground">
+                Every outcome is signed by a tenant’s wallet on Arkiv and linked back to terms the
+                landlord signed — a record no platform, landlord, or we can edit or delete.
+              </p>
+              <div className="relative mt-2 border border-foreground/40 bg-card">
+                <CornerMarks />
+                <p className="border-b border-border px-4 py-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                  Query the ledger — keyless, no signup
+                </p>
+                <div className="p-4">
+                  <Suspense fallback={<ConsoleSkeleton />}>
+                    <LookupConsole />
+                  </Suspense>
+                </div>
+              </div>
+            </div>
+            <div className="lg:pt-10">
+              <Suspense fallback={<DossierSkeleton />}>
+                <DossierSlot />
+              </Suspense>
+            </div>
+          </AnimatedContent>
+          <Suspense fallback={null}>
+            <StatsStrip />
+          </Suspense>
         </div>
       </section>
 
@@ -91,57 +109,100 @@ export default function Home() {
  *  can flap, and the anonymous query budget can be exhausted. The search
  *  form works by wallet address without the directory; on failure we
  *  render it with an honest note naming the real cause instead of an
- *  infinite skeleton. */
+ *  infinite skeleton. React `cache` dedupes the three hero consumers
+ *  (console, dossier, stats) onto one fetch per render. */
 const DIRECTORY_BOUND_MS = 10_000;
 
-type DirectoryResult =
-  | { directory: DirectoryEntry[]; note?: undefined }
-  | { directory: null; note: string };
+type HeroResult =
+  | { kind: "ok"; data: HeroData }
+  | { kind: "timeout" }
+  | { kind: "error"; error: unknown };
 
-function directoryFailure(e: unknown): string {
-  const msg = e instanceof Error ? e.message : String(e);
-  if (/ANON_COST_LIMITED|cost limit|quota|budget/i.test(msg)) {
-    return "The testnet's public query budget is exhausted right now — search by wallet address above still works.";
+const heroData = cache(async (): Promise<HeroResult> => {
+  const timeout = new Promise<HeroResult>((res) =>
+    setTimeout(() => res({ kind: "timeout" }), DIRECTORY_BOUND_MS),
+  );
+  return Promise.race([
+    getHeroData().then(
+      (data): HeroResult => ({ kind: "ok", data }),
+      (error): HeroResult => ({ kind: "error", error }),
+    ),
+    timeout,
+  ]);
+});
+
+async function tryHeroData(): Promise<{ data: HeroData | null; note?: string }> {
+  const res = await heroData();
+  if (res.kind === "ok") return { data: res.data };
+  let note = "The directory didn’t answer in time — search by wallet address still works.";
+  if (res.kind === "error") {
+    const msg = res.error instanceof Error ? res.error.message : String(res.error);
+    note = /ANON_COST_LIMITED|cost limit|quota|budget/i.test(msg)
+      ? "The testnet's public query budget is exhausted right now — search by wallet address still works."
+      : "The directory read failed — search by wallet address still works.";
   }
-  return "The directory read failed — search by wallet address above still works.";
+  return { data: null, note };
 }
 
-async function DirectoryLookup() {
-  await io();
-  const result = await Promise.race<DirectoryResult>([
-    listDirectory().then(
-      (directory) => ({ directory }),
-      (e) => ({ directory: null, note: directoryFailure(e) }),
-    ),
-    new Promise<DirectoryResult>((res) =>
-      setTimeout(
-        () =>
-          res({
-            directory: null,
-            note: "The directory didn’t answer in time — search by wallet address above still works.",
-          }),
-        DIRECTORY_BOUND_MS,
-      ),
-    ),
-  ]);
-  const termsCount =
-    result.directory?.reduce((sum, l) => sum + l.termsCount, 0) ?? 0;
+function CornerMarks() {
+  const c = "pointer-events-none absolute font-mono text-xs leading-none text-foreground/50 select-none";
   return (
-    <div>
-      {termsCount > 0 && (
-        <p className="mb-3 flex items-center gap-2 text-sm text-muted-foreground">
-          <span className="rounded-sm bg-primary px-1.5 py-0.5 font-mono text-xs font-medium tabular-nums text-primary-foreground">
-            {termsCount}
-          </span>
-          deposit terms signed on Arkiv — every one queryable, even if we vanished
-        </p>
-      )}
-      <LookupForm directory={result.directory} directoryNote={result.note} />
-    </div>
+    <>
+      <span aria-hidden className={`${c} -left-1.5 -top-2.5`}>+</span>
+      <span aria-hidden className={`${c} -right-1.5 -top-2.5`}>+</span>
+      <span aria-hidden className={`${c} -left-1.5 -bottom-2`}>+</span>
+      <span aria-hidden className={`${c} -right-1.5 -bottom-2`}>+</span>
+    </>
   );
 }
 
-function DirectorySkeleton() {
+async function LookupConsole() {
+  await io();
+  const { data, note } = await tryHeroData();
+  return <LookupForm directory={data?.directory ?? null} directoryNote={note} />;
+}
+
+async function DossierSlot() {
+  const { data } = await tryHeroData();
+  if (!data?.featured) {
+    return (
+      <div className="relative border border-foreground/40 bg-card p-4">
+        <CornerMarks />
+        <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+          Specimen — unavailable
+        </p>
+        <p className="mt-2 text-sm text-muted-foreground">
+          No entity fetched — the chain read didn’t complete. The console left of
+          here still works by wallet address.
+        </p>
+      </div>
+    );
+  }
+  return <EntityDossier entity={data.featured} snapshot={data.snapshot} />;
+}
+
+async function StatsStrip() {
+  const { data } = await tryHeroData();
+  if (!data) return null;
+  const stats: [string, number][] = [
+    ["Deposit terms signed", data.termsCount],
+    ["Outcomes recorded", data.outcomesCount],
+    ["Verified on-chain", data.verifiedCount],
+    ["Landlords on the ledger", data.directory.length],
+  ];
+  return (
+    <dl className="mt-14 grid grid-cols-2 border border-foreground/40 bg-card sm:grid-cols-4 sm:divide-x sm:divide-border">
+      {stats.map(([label, n]) => (
+        <div key={label} className="px-4 py-3">
+          <dt className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">{label}</dt>
+          <dd className="mt-1 font-mono text-2xl tabular-nums">{n}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+function ConsoleSkeleton() {
   return (
     <div aria-busy>
       <Skeleton className="h-11 w-full rounded-md" />
@@ -150,6 +211,22 @@ function DirectorySkeleton() {
         <Skeleton className="h-11 w-52 rounded-sm" />
         <Skeleton className="h-11 w-40 rounded-sm" />
       </div>
+    </div>
+  );
+}
+
+function DossierSkeleton() {
+  return (
+    <div aria-busy className="border border-foreground/40 bg-card">
+      <Skeleton className="m-4 h-3 w-1/2" />
+      <Skeleton className="mx-4 h-8 w-full" />
+      <div className="m-4 grid grid-cols-2 gap-px">
+        <Skeleton className="h-12" />
+        <Skeleton className="h-12" />
+        <Skeleton className="h-12" />
+        <Skeleton className="h-12" />
+      </div>
+      <Skeleton className="m-4 h-3 w-2/3" />
     </div>
   );
 }
