@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { Wallet, X } from "lucide-react";
 import { useWallet } from "./WalletProvider";
 import { getProvider, type Eip6963Detail } from "@/lib/arkiv/browser";
@@ -32,7 +33,7 @@ export function WalletPicker({
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
-  if (!open) return null;
+  if (!open || typeof document === "undefined") return null;
 
   const pick = async (uuid: string | null) => {
     setConnectingUid(uuid ?? "default");
@@ -46,7 +47,9 @@ export function WalletPicker({
     }
   };
 
-  return (
+  // Portal to body — the header's backdrop-blur makes it a containing block
+  // for position:fixed children, which would clip this modal inside the nav.
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center"
       onClick={(e) => e.target === e.currentTarget && onClose()}
@@ -118,7 +121,8 @@ export function WalletPicker({
           <p role="alert" className="mt-3 text-sm text-danger">{error}</p>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
