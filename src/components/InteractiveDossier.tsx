@@ -54,7 +54,11 @@ export function InteractiveDossier({
   if (!shown) return <EmptyDossier />;
   return (
     <div>
-      <EntityDossier key={shown.entityKey} entity={shown} snapshot={snapshot} />
+      {/* key remounts on entity change — rise-in replays so the specimen
+          visibly swaps rather than snapping. Reduced-motion snaps anyway. */}
+      <div key={shown.entityKey} className="rise-in">
+        <EntityDossier entity={shown} snapshot={snapshot} />
+      </div>
       {selected && (
         <Link
           href={`/landlord/${selected}`}

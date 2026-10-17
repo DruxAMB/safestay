@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Inter, Geist_Mono } from "next/font/google";
 import { ShieldCheck } from "lucide-react";
 import { WalletProvider } from "@/components/WalletProvider";
+import { ToastProvider } from "@/components/Toaster";
 import { ConnectWallet } from "@/components/ConnectWallet";
 import "./globals.css";
 
@@ -37,6 +38,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${inter.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
+        <ToastProvider>
         <WalletProvider>
         <header className="border-b border-border-inverse bg-surface-inverse text-text-inverse">
           <nav className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4 sm:gap-5 sm:px-6" aria-label="Main">
@@ -45,13 +47,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               SafeStay
             </Link>
             <div className="ml-auto flex items-center gap-0.5 text-sm">
-              <Link href="/feed" className="min-h-11 inline-flex items-center rounded-md px-2 text-text-inverse-muted sm:px-3 [@media(hover:hover)]:hover:bg-white/5 [@media(hover:hover)]:hover:text-text-inverse">
+              <Link href="/feed" className="min-h-11 inline-flex items-center rounded-md px-2 text-text-inverse-muted transition-colors sm:px-3 [@media(hover:hover)]:hover:bg-white/5 [@media(hover:hover)]:hover:text-text-inverse">
                 Feed
               </Link>
-              <Link href="/record" className="min-h-11 inline-flex items-center rounded-md px-2 text-text-inverse-muted sm:px-3 [@media(hover:hover)]:hover:bg-white/5 [@media(hover:hover)]:hover:text-text-inverse">
+              <Link href="/record" className="min-h-11 inline-flex items-center rounded-md px-2 text-text-inverse-muted transition-colors sm:px-3 [@media(hover:hover)]:hover:bg-white/5 [@media(hover:hover)]:hover:text-text-inverse">
                 Record
               </Link>
-              <Link href="/about" className="min-h-11 inline-flex items-center rounded-md px-2 text-text-inverse-muted sm:px-3 [@media(hover:hover)]:hover:bg-white/5 [@media(hover:hover)]:hover:text-text-inverse">
+              <Link href="/about" className="min-h-11 inline-flex items-center rounded-md px-2 text-text-inverse-muted transition-colors sm:px-3 [@media(hover:hover)]:hover:bg-white/5 [@media(hover:hover)]:hover:text-text-inverse">
                 About
               </Link>
               <ConnectWallet />
@@ -70,6 +72,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           </div>
         </footer>
         </WalletProvider>
+        </ToastProvider>
       </body>
     </html>
   );

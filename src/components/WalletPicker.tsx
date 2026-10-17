@@ -59,7 +59,7 @@ export function WalletPicker({
         role="dialog"
         aria-modal="true"
         aria-label="Connect a wallet"
-        className="w-full rounded-t-2xl border border-border bg-card p-5 sm:max-w-sm sm:rounded-2xl"
+        className="pop-in w-full rounded-t-2xl border border-border bg-card p-5 sm:max-w-sm sm:rounded-2xl"
       >
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-medium">Connect a wallet</h2>
@@ -67,7 +67,7 @@ export function WalletPicker({
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-md text-muted-foreground [@media(hover:hover)]:hover:bg-muted"
+            className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-md text-muted-foreground transition-colors [@media(hover:hover)]:hover:bg-muted"
           >
             <X size={16} aria-hidden />
           </button>
@@ -100,7 +100,7 @@ export function WalletPicker({
               type="button"
               disabled={connectingUid !== null}
               onClick={() => void pick(null)}
-              className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-sm font-medium disabled:opacity-50 [@media(hover:hover)]:hover:bg-muted"
+              className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors disabled:opacity-50 [@media(hover:hover)]:hover:bg-muted"
             >
               <Wallet size={18} aria-hidden className="text-muted-foreground" />
               Browser default wallet
@@ -142,7 +142,7 @@ function WalletRow({
       type="button"
       disabled={disabled}
       onClick={onPick}
-      className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-sm font-medium disabled:opacity-50 [@media(hover:hover)]:hover:bg-muted"
+      className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors disabled:opacity-50 [@media(hover:hover)]:hover:bg-muted"
     >
       {wallet.info.icon ? (
         // eslint-disable-next-line @next/next/no-img-element

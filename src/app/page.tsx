@@ -100,13 +100,13 @@ export default function Home() {
           <div className="mt-9 flex flex-wrap gap-3">
             <Link
               href="/record"
-              className="inline-flex min-h-11 items-center gap-2 rounded-sm bg-primary px-4 text-sm font-medium text-primary-foreground [@media(hover:hover)]:hover:bg-primary/90"
+              className="inline-flex min-h-11 items-center gap-2 rounded-sm bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors [@media(hover:hover)]:hover:bg-primary/90"
             >
               <FileSignature size={16} aria-hidden /> Record on Arkiv
             </Link>
             <Link
               href="/feed"
-              className="inline-flex min-h-11 items-center gap-2 rounded-sm border border-border-inverse px-4 text-sm font-medium text-text-inverse [@media(hover:hover)]:hover:bg-white/5"
+              className="inline-flex min-h-11 items-center gap-2 rounded-sm border border-border-inverse px-4 text-sm font-medium text-text-inverse transition-colors [@media(hover:hover)]:hover:bg-white/5"
             >
               <ShieldCheck size={16} aria-hidden className="text-primary" /> Watch the live ledger
             </Link>

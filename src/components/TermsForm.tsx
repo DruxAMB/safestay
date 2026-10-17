@@ -5,6 +5,8 @@ import { isAddress } from "viem";
 import type { ActionResult } from "@/app/actions";
 import { explorerEntityUrl, explorerTxUrl } from "@/lib/arkiv/config";
 import { Button, Card, Input, Label, Badge } from "@/components/ui";
+import { useToast } from "@/components/Toaster";
+import { friendlyError } from "@/lib/errors";
 import { ExternalLink, Loader2 } from "lucide-react";
 
 /** Landlord terms-signing form — presentational; `onSubmit` decides who
@@ -32,6 +34,7 @@ export function TermsForm({
   const [displayName, setDisplayName] = useState("");
   const [result, setResult] = useState<ActionResult | null>(null);
   const [pending, start] = useTransition();
+  const t = useToast();
 
   const tenantOk = isAddress(tenant.trim() as `0x${string}`);
 
@@ -48,7 +51,16 @@ export function TermsForm({
       fd.set("durationMonths", months);
       fd.set("note", note);
       if (displayName.trim()) fd.set("displayName", displayName.trim());
-      setResult(await onSubmit(fd));
+      try {
+        const r = await onSubmit(fd);
+        setResult(r);
+        if (r.ok) t.success("Deposit terms signed on Arkiv", "The record is live — history pages update in seconds.");
+        else t.danger("Couldn't sign the terms", r.error);
+      } catch (err) {
+        const msg = friendlyError(err);
+        setResult({ ok: false, error: msg });
+        t.danger("Couldn't sign the terms", msg);
+      }
     });
   }
 

@@ -7,6 +7,7 @@ import { Button, Input, Label } from "@/components/ui";
 import { shortAddr } from "@/lib/format";
 import { TOWER_LANDLORD } from "@/lib/arkiv/config";
 import { useHeroSelection } from "./HeroSelection";
+import { useToast } from "./Toaster";
 
 const ADDR_RE = /^0x[0-9a-fA-F]{40}$/;
 
@@ -36,6 +37,7 @@ export function LookupForm({ directory, directoryNote }: {
   // building both land here. While something is picked the input shows the
   // picked address; the first keystroke clears it and the field is yours.
   const { selected, select } = useHeroSelection();
+  const t = useToast();
   const picked = selected;
   const value = picked ?? typed;
 
@@ -70,11 +72,11 @@ export function LookupForm({ directory, directoryNote }: {
       go(hit.address);
       return;
     }
-    setError(
-      entries.length
-        ? "No registered landlord matches — try a wallet address, or pick from the directory."
-        : "Enter a wallet address (0x + 40 hex).",
-    );
+    const msg = entries.length
+      ? "No registered landlord matches — try a wallet address, or pick from the directory."
+      : "Enter a wallet address (0x + 40 hex).";
+    setError(msg);
+    t.danger("No match", msg);
   }
 
   return (
@@ -121,7 +123,7 @@ export function LookupForm({ directory, directoryNote }: {
             type="button"
             onClick={() => pick(l)}
             aria-pressed={picked === l.address}
-            className={`inline-flex min-h-11 items-center gap-2 rounded-sm border px-4 text-sm [@media(hover:hover)]:hover:border-foreground ${
+            className={`inline-flex min-h-11 items-center gap-2 rounded-sm border px-4 text-sm transition-colors [@media(hover:hover)]:hover:border-foreground ${
               picked === l.address
                 ? "border-foreground bg-primary/20"
                 : "border-border bg-card [@media(hover:hover)]:hover:bg-muted"

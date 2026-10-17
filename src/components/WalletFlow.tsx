@@ -8,6 +8,8 @@ import { WalletPicker } from "./WalletPicker";
 import { OutcomeForm } from "./OutcomeForm";
 import { TermsForm } from "./TermsForm";
 import { Badge, Button, Card, Skeleton } from "./ui";
+import { useToast } from "./Toaster";
+import { friendlyError } from "@/lib/errors";
 import {
   browserExtendTerms,
   browserMyTerms,
@@ -33,31 +35,40 @@ export function WalletFlow() {
   const [role, setRole] = useState<"tenant" | "landlord">("tenant");
   const [myTerms, setMyTerms] = useState<MyTerms[] | null>(null);
   const [openTerms, setOpenTerms] = useState<TermsDto[] | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [loading, start] = useTransition();
+  const t = useToast();
 
   const refresh = useCallback(() => {
     if (!address) return;
     start(async () => {
-      const [open, mine] = await Promise.all([
-        browserOpenTermsFor(address),
-        browserMyTerms(address),
-      ]);
-      setOpenTerms(
-        open.map((t) => ({
-          entityKey: t.termsKey,
-          creator: t.creator,
-          tenant: address,
-          depositInr: t.depositInr,
-          city: t.city,
-          propertyLabel: t.label,
-          createdAtMs: "0",
-          expiresAtBlock: "0",
-          displayLabel: t.label,
-        })),
-      );
-      setMyTerms(mine);
+      try {
+        const [open, mine] = await Promise.all([
+          browserOpenTermsFor(address),
+          browserMyTerms(address),
+        ]);
+        setOpenTerms(
+          open.map((t) => ({
+            entityKey: t.termsKey,
+            creator: t.creator,
+            tenant: address,
+            depositInr: t.depositInr,
+            city: t.city,
+            propertyLabel: t.label,
+            createdAtMs: "0",
+            expiresAtBlock: "0",
+            displayLabel: t.label,
+          })),
+        );
+        setMyTerms(mine);
+        setLoadError(null);
+      } catch (e) {
+        const msg = friendlyError(e);
+        setLoadError(msg);
+        t.danger("Couldn't load your records", msg);
+      }
     });
-  }, [address]);
+  }, [address, t]);
 
   useEffect(() => {
     if (address) refresh();
@@ -95,7 +106,7 @@ export function WalletFlow() {
               role="tab"
               aria-selected={role === r}
               onClick={() => setRole(r)}
-              className={`min-h-10 rounded-md px-3 text-sm font-medium ${
+              className={`min-h-10 rounded-md px-3 text-sm font-medium transition-colors ${
                 role === r ? "bg-primary text-primary-foreground" : "text-muted-foreground [@media(hover:hover)]:hover:bg-muted"
               }`}
             >
@@ -107,20 +118,40 @@ export function WalletFlow() {
 
       <div className="mt-4">
         {loading || openTerms === null || myTerms === null ? (
-          <div aria-busy className="flex flex-col gap-3">
-            <Skeleton className="h-24 w-full rounded-lg" />
-            <Skeleton className="h-64 w-full rounded-lg" />
-          </div>
+          loadError ? (
+            <div role="alert" className="flex flex-col items-start gap-3 rounded-md bg-danger-bg px-4 py-3 text-sm text-danger">
+              <p>Couldn&rsquo;t load your records — {loadError}</p>
+              <Button variant="secondary" onClick={refresh}>Retry</Button>
+            </div>
+          ) : (
+            <div aria-busy className="flex flex-col gap-3">
+              <Skeleton className="h-24 w-full rounded-lg" />
+              <Skeleton className="h-64 w-full rounded-lg" />
+            </div>
+          )
         ) : role === "tenant" ? (
           <OutcomeForm
             openTerms={openTerms}
             emptyTitle="No terms name your wallet"
             emptyBody="A landlord must sign deposit_terms naming your address before you can record an outcome. To try it solo: switch to the landlord tab and sign terms naming your own wallet."
             signerNote={<>Signed by your wallet <span className="font-mono">{shortAddr(address)}</span> — you are the on-chain creator.</>}
-            onSubmit={async (fd) => walletOutcomeSubmit(address, fd)}
+            onSubmit={async (fd) => {
+              const r = await walletOutcomeSubmit(address, fd);
+              if (r.ok) refresh();
+              return r;
+            }}
           />
         ) : (
-          <LandlordTab me={address} myTerms={myTerms} onChanged={refresh} />
+          <LandlordTab
+            me={address}
+            myTerms={myTerms}
+            onChanged={refresh}
+            onSubmit={async (fd) => {
+              const r = await walletTermsSubmit(address, fd);
+              if (r.ok) refresh();
+              return r;
+            }}
+          />
         )}
       </div>
     </div>
@@ -147,13 +178,19 @@ async function walletOutcomeSubmit(address: Address, fd: FormData): Promise<Acti
     });
     return { ok: true, txHash: res.txHash, entityKey: res.entityKey, extra: res.evidenceKey ?? undefined };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "wallet write failed" };
+    return { ok: false, error: friendlyError(e) };
   }
 }
 
-function LandlordTab({ me, myTerms, onChanged }: { me: Address; myTerms: MyTerms[]; onChanged: () => void }) {
+function LandlordTab({ me, myTerms, onChanged, onSubmit }: {
+  me: Address;
+  myTerms: MyTerms[];
+  onChanged: () => void;
+  onSubmit: (fd: FormData) => Promise<ActionResult>;
+}) {
   const [extending, setExtending] = useState<string | null>(null);
   const [extResult, setExtResult] = useState<{ key: string; tx?: string; err?: string } | null>(null);
+  const toast = useToast();
 
   return (
     <div className="flex flex-col gap-6">
@@ -161,7 +198,7 @@ function LandlordTab({ me, myTerms, onChanged }: { me: Address; myTerms: MyTerms
         defaultTenant={me}
         showProfileName
         signerNote={<>Signed by your wallet — you are the landlord’s on-chain creator. A display name writes a <code className="font-mono">landlord_profile</code> in the same tx.</>}
-        onSubmit={async (fd) => walletTermsSubmit(me, fd)}
+        onSubmit={onSubmit}
       />
 
       <section aria-label="My signed terms">
@@ -194,9 +231,12 @@ function LandlordTab({ me, myTerms, onChanged }: { me: Address; myTerms: MyTerms
                           browserSigner(me), t.key, BigInt(t.expiresAtBlock),
                         );
                         setExtResult({ key: t.key, tx: r.txHash });
+                        toast.success("Terms extended +12 months");
                         onChanged();
                       } catch (e) {
-                        setExtResult({ key: t.key, err: e instanceof Error ? e.message : "extend failed" });
+                        const msg = friendlyError(e);
+                        setExtResult({ key: t.key, err: msg });
+                        toast.danger("Couldn't extend the terms", msg);
                       } finally {
                         setExtending(null);
                       }
@@ -247,6 +287,6 @@ async function walletTermsSubmit(me: Address, fd: FormData): Promise<ActionResul
     });
     return { ok: true, txHash: res.txHash, entityKey: res.entityKey };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "wallet write failed" };
+    return { ok: false, error: friendlyError(e) };
   }
 }

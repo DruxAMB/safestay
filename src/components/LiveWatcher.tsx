@@ -7,6 +7,7 @@ import { tiramisu } from "@arkiv-network/sdk/chains";
 import { webSocket } from "viem";
 import { PROJECT, TIRAMISU_WS } from "@/lib/arkiv/config";
 import { Badge } from "@/components/ui";
+import { useToast } from "@/components/Toaster";
 
 /** Subscribes to the global Arkiv entity-event stream over WebSocket.
  *  When a deposit_outcome lands for this landlord, re-runs the server
@@ -16,6 +17,20 @@ export function LiveWatcher({ landlord }: { landlord: string | null }) {
   const router = useRouter();
   const [status, setStatus] = useState<"connecting" | "live" | "offline">("connecting");
   const pending = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const t = useToast();
+  const dropped = useRef(false);
+
+  // Announce feed transitions once — offline is the only state the user
+  // can't infer from content, so it's the one worth a toast.
+  useEffect(() => {
+    if (status === "offline") {
+      dropped.current = true;
+      t.warn("Live feed offline", "The page still works — new records just won't refresh in real time.");
+    } else if (status === "live" && dropped.current) {
+      dropped.current = false;
+      t.success("Live feed restored");
+    }
+  }, [status, t]);
 
   useEffect(() => {
     let unwatch: (() => void) | undefined;

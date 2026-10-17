@@ -4,6 +4,7 @@ import { z } from "zod";
 import { isAddress } from "viem";
 import { refresh } from "next/cache";
 import { recordOutcome, recordTerms, renewTerms } from "@/lib/arkiv/writes";
+import { friendlyError } from "@/lib/errors";
 import type { Outcome, EvidenceKind } from "@/lib/arkiv/config";
 
 export type ActionResult =
@@ -52,7 +53,7 @@ export async function recordOutcomeAction(form: FormData): Promise<ActionResult>
       extra: res.evidenceKey ?? undefined,
     };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "write failed" };
+    return { ok: false, error: friendlyError(e) };
   }
 }
 
@@ -80,7 +81,7 @@ export async function recordTermsAction(form: FormData): Promise<ActionResult> {
     refresh();
     return { ok: true, txHash: res.txHash, entityKey: res.entityKey };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "write failed" };
+    return { ok: false, error: friendlyError(e) };
   }
 }
 
@@ -91,7 +92,7 @@ export async function renewTermsAction(termsKey: string): Promise<ActionResult> 
     refresh();
     return { ok: true, txHash: res.txHash, entityKey: res.entityKey };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "renew failed" };
+    return { ok: false, error: friendlyError(e) };
   }
 }
 

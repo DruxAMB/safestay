@@ -30,7 +30,7 @@ export default function RecordError({
           <button
             type="button"
             onClick={reset}
-            className="mt-3 inline-flex min-h-10 items-center rounded-md border border-border bg-card px-3 text-sm font-medium [@media(hover:hover)]:hover:bg-muted"
+            className="mt-3 inline-flex min-h-10 items-center rounded-md border border-border bg-card px-3 text-sm font-medium transition-colors [@media(hover:hover)]:hover:bg-muted"
           >
             Try again
           </button>
