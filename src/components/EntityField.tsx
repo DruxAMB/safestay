@@ -43,12 +43,12 @@ export function EntityField({ blocks, className = "" }: { blocks: FieldBlock[]; 
   useEffect(() => {
     const mount = mountRef.current;
     if (!mount || blocks.length === 0) return undefined;
-    if (mount.offsetParent === null) return undefined; // hidden (< lg) — don't spin up WebGL
     let renderer: THREE.WebGLRenderer;
     try {
       renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     } catch {
-      return undefined; // no WebGL — dossier still renders
+      console.warn("EntityField: WebGL context unavailable — skipping 3D field");
+      return undefined; // dossier still renders
     }
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -116,7 +116,12 @@ export function EntityField({ blocks, className = "" }: { blocks: FieldBlock[]; 
     const size = () => {
       const w = mount.clientWidth, h = mount.clientHeight;
       renderer.setSize(w, h, true);
-      camera.aspect = w / Math.max(h, 1);
+      const aspect = w / Math.max(h, 1);
+      camera.aspect = aspect;
+      // Narrow viewports: pull back + shrink so blocks stay ambient texture,
+      // not giant faces behind the headline.
+      camera.position.z = aspect < 0.8 ? 17 : aspect < 1.2 ? 13.5 : 11;
+      group.scale.setScalar(aspect < 0.8 ? 0.62 : 1);
       camera.updateProjectionMatrix();
     };
     size();
@@ -150,7 +155,5 @@ export function EntityField({ blocks, className = "" }: { blocks: FieldBlock[]; 
     };
   }, [blocks]);
 
-  // lg+ only: on narrow viewports the perspective makes blocks huge and
-  // they'd crowd the headline — mobile keeps the stipple + dossier.
-  return <div ref={mountRef} aria-hidden className={`pointer-events-none absolute inset-0 hidden lg:block ${className}`} />;
+  return <div ref={mountRef} aria-hidden className={`pointer-events-none absolute inset-0 ${className}`} />;
 }
