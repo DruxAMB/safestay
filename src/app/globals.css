@@ -119,6 +119,23 @@ body {
 @keyframes hint-in { to { opacity: 0.4; } }
 @keyframes hint-pulse { 50% { opacity: 0.15; } }
 
+/* Route loading — the five slabs restructure between the app's two
+ *  silhouettes (tower ⇄ stepped-L) while the next page streams. Per-floor
+ *  --dx/--sx vars resolve inside the keyframes; animation-delay staggers
+ *  the wave bottom-up. Reduced-motion block flattens to a static building. */
+@keyframes lb-morph {
+  0%, 22% { transform: none; }
+  44%, 66% { transform: translate(var(--dx, 0px), 0) scaleX(var(--sx, 1)); }
+  88%, 100% { transform: none; }
+}
+.lb-floor {
+  animation: lb-morph 3.4s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  transform-box: fill-box;
+  transform-origin: 100% 100%;
+}
+@keyframes load-in { to { opacity: 1; } }
+.load-in { opacity: 0; animation: load-in 250ms ease-out 150ms forwards; }
+
 /* Focus ring — visible on every interactive element, token-driven. */
 :where(a, button, input, select, textarea, [tabindex]):focus-visible {
   outline: 2px solid var(--ring);

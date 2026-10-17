@@ -45,6 +45,7 @@ export function LookupForm({ directory, directoryNote }: {
   const value = picked ?? typed;
 
   function go(addr: string) {
+    window.dispatchEvent(new Event("safestay:nav"));
     startNav(() => router.push(`/landlord/${addr.trim()}`));
   }
 

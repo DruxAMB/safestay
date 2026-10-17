@@ -6,6 +6,7 @@ import { WalletProvider } from "@/components/WalletProvider";
 import { ToastProvider } from "@/components/Toaster";
 import { LinkHint } from "@/components/LinkHint";
 import { ConnectWallet } from "@/components/ConnectWallet";
+import { NavLoader } from "@/components/NavLoader";
 import "./globals.css";
 
 const inter = Inter({
@@ -66,6 +67,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           </nav>
         </header>
         <main className="flex-1">{children}</main>
+        <NavLoader />
         <footer className="border-t border-border-inverse bg-surface-inverse">
           <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-1 px-4 py-4 text-xs text-text-inverse-muted sm:px-6">
             <span>Built on Arkiv · Tiramisu testnet · Next.js</span>
