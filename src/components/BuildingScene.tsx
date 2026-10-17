@@ -303,9 +303,9 @@ export function BuildingScene({ className = "" }: { className?: string }) {
 
     // Anchor lower-right of the full-bleed canvas: the dossier overlaps its
     // lower-left corner; headline column stays clear.
-    building.scale.setScalar(0.7);
-    building.position.x = 3.2;
-    building.position.y = 0.3;
+    building.scale.setScalar(0.65);
+    building.position.x = 3.6;
+    building.position.y = 0.2;
     scene.add(building);
     scene.add(blobShadow());
 
