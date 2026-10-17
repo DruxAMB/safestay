@@ -328,15 +328,16 @@ function padlock(dark = false) {
  *  floating padlock beside it. Skyline Towers swaps to this model. */
 function buildTower() {
   const g = new THREE.Group();
-  const W = 3.0, D = 2.1, X = 0.2, Z = -0.35, FL = 10, FH = 0.88;
+  const W = 7.6, D = 2.6, X = 0.2, Z = -0.35, FL = 10, FH = 0.62;
   const POD = 0.55;
+  const COLS = [-3.0, -1.5, 0, 1.5, 3.0];
   const topY = (f: number) => POD + f * FH + FH / 2 - 0.05;
   const frontZ = Z + D / 2;
 
   // Podium plinth — extends past the tower on all sides, capped, with a
   // small dark entrance notch on the front face.
-  g.add(box(W + 1.8, POD, D + 1.6, BASE, X, POD / 2, Z - 0.1));
-  g.add(box(W + 1.9, 0.08, D + 1.7, SLAB, X, POD + 0.04, Z - 0.1));
+  g.add(box(W + 1.0, POD, D + 1.4, BASE, X, POD / 2, Z - 0.1));
+  g.add(box(W + 1.1, 0.08, D + 1.5, SLAB, X, POD + 0.04, Z - 0.1));
   g.add(box(0.6, 0.34, 0.07, INK, X, POD * 0.55, Z - 0.1 + (D + 1.6) / 2));
 
   // Tower body — one tall slab, subtle floor lines, crown cap.
@@ -347,15 +348,15 @@ function buildTower() {
   }
   g.add(box(W + 0.1, 0.09, D + 0.1, SLAB, X, POD + h, Z));
 
-  // Vertical window strips: 3 pair columns on the front, slim singles on
+  // Vertical window strips: 5 pair columns on the front, slim singles on
   // both side faces; plus the shallow recessed groove on the front.
-  for (const cx of [-1.0, 0, 1.0]) {
+  for (const cx of COLS) {
     for (let f = 0; f < FL; f++) {
       g.add(put(windowPair(), "front", X + cx, topY(f), frontZ + 0.02));
     }
   }
   g.add(box(0.06, h - 0.4, 0.05, MULLION, X + 0.52, POD + h / 2, frontZ + 0.03));
-  for (const cz of [-0.35, 0.35]) {
+  for (const cz of [-0.45, 0.45]) {
     for (let f = 0; f < FL; f++) {
       g.add(put(windowUnit(0.22, 0.55), "right", X + W / 2 + 0.02, topY(f), Z + cz));
       g.add(put(windowUnit(0.22, 0.55), "end", X - W / 2 - 0.02, topY(f), Z + cz));
@@ -382,7 +383,7 @@ function buildTower() {
   const band = new THREE.Group();
   band.add(new THREE.Mesh(new THREE.BoxGeometry(W + 0.08, FH * 0.9, 0.12), bandMat));
   band.add(box(0.12, FH * 0.9, D * 0.55, 0xf8ffcf, W / 2 + 0.04, 0, -D * 0.18, { emissive: ACCENT, ei: 1.0, rough: 0.4 }));
-  for (const ox of [-1.0, 0, 1.0]) {
+  for (const ox of COLS) {
     band.add(box(0.5, FH * 0.58, 0.13, 0xecff5e, ox, 0, 0.06, { emissive: ACCENT, ei: 0.9, rough: 0.3 }));
     band.add(box(0.035, FH * 0.58, 0.14, MULLION, ox, 0, 0.065));
   }
@@ -395,7 +396,7 @@ function buildTower() {
   // Dark padlock floating right of the band — no tether in the reference.
   const lock = padlock(true);
   lock.scale.setScalar(1.4);
-  const lockHome = new THREE.Vector3(X + W / 2 + 1.35, topY(GF) + 0.25, frontZ + 0.55);
+  const lockHome = new THREE.Vector3(X + W / 2 + 1.1, topY(GF) + 0.25, frontZ + 0.55);
   lock.position.copy(lockHome);
   g.add(lock);
 
@@ -403,8 +404,8 @@ function buildTower() {
   const slots: { x: number; y: number; z: number; ry: number }[] = [];
   for (let f = 0; f < FL; f++) {
     if (f === GF) continue; // the band owns this floor
-    for (const c of [-1.0, 0, 1.0]) slots.push({ x: X + c, y: topY(f), z: frontZ + 0.08, ry: 0 });
-    for (const cz of [-0.35, 0.35]) slots.push({ x: X + W / 2 + 0.08, y: topY(f), z: Z + cz, ry: Math.PI / 2 });
+    for (const c of COLS) slots.push({ x: X + c, y: topY(f), z: frontZ + 0.08, ry: 0 });
+    for (const cz of [-0.45, 0.45]) slots.push({ x: X + W / 2 + 0.08, y: topY(f), z: Z + cz, ry: Math.PI / 2 });
   }
   const units = new THREE.Group();
   g.add(units);
@@ -581,8 +582,9 @@ export function BuildingScene({ className = "" }: { className?: string }) {
     //      their chip / unit is selected) ----------------------------------
     const tower = buildTower();
     tower.group.visible = false;
-    tower.group.scale.setScalar(0.66); // 10 floors vs the L-block's 5
-    tower.group.position.x = 0.8; // park it on the same right-side footprint
+    tower.group.scale.setScalar(0.78); // 10 floors vs the L-block's 5
+    tower.group.position.x = 0.5; // park it on the same right-side footprint
+    tower.group.position.y = 0.3; // lift the plinth off the section fold
     building.add(lblock, tower.group);
 
     // Anchor lower-right of the full-bleed canvas: the dossier overlaps its
@@ -731,12 +733,12 @@ export function BuildingScene({ className = "" }: { className?: string }) {
       w.activeModel = m;
       lblock.visible = m === "lb";
       tower.group.visible = m === "tw";
-      frustumCur = m === "tw" ? 5.7 : 4.4;
+      frustumCur = 4.4; // both models share the frame now
       size();
-      camera.lookAt(0.4, m === "tw" ? 3.5 : 2.6, -0.3);
+      camera.lookAt(0.4, 2.6, -0.3);
       if (reduce) {
         lblock.scale.setScalar(1);
-        tower.group.scale.setScalar(0.66);
+        tower.group.scale.setScalar(0.78);
         paint();
       } else {
         w.popT = w.now();
@@ -792,7 +794,7 @@ export function BuildingScene({ className = "" }: { className?: string }) {
         const pe = Math.min(1, (t - w.popT) / 0.35);
         const es = 1 - Math.pow(1 - pe, 3);
         const g = tw ? tower.group : lblock;
-        const base = tw ? 0.66 : 1;
+        const base = tw ? 0.78 : 1;
         g.scale.setScalar(base * (0.86 + 0.14 * es));
         if (pe >= 1) {
           g.scale.setScalar(base);
