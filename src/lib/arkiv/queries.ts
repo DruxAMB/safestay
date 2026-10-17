@@ -141,14 +141,19 @@ export async function getLandlordHistory(landlord: Address): Promise<LandlordHis
   ]);
 
   const termsByKey = new Map(termsRes.entities.map((t) => [t.key, t]));
-  const outcomes = outcomesRes.entities.map((o) => {
-    const tk = attrKey(o.attributes, "terms_key");
-    const terms = tk ? termsByKey.get(tk) : undefined;
-    const namedTenant = terms && attrAddr(terms.attributes, "tenant_wallet");
-    const verified =
-      !!terms && !!namedTenant && isAddressEqual(namedTenant, o.creator as Address);
-    return toOutcomeDto(o, verified, !!tk && !terms);
-  });
+  const outcomes = outcomesRes.entities
+    .map((o) => {
+      const tk = attrKey(o.attributes, "terms_key");
+      const terms = tk ? termsByKey.get(tk) : undefined;
+      const namedTenant = terms && attrAddr(terms.attributes, "tenant_wallet");
+      const verified =
+        !!terms && !!namedTenant && isAddressEqual(namedTenant, o.creator as Address);
+      return toOutcomeDto(o, verified, !!tk && !terms);
+    })
+    // Newest first — the ledger reads chronologically backwards.
+    .sort((a, b) =>
+      BigInt(b.createdAtMs || "0") > BigInt(a.createdAtMs || "0") ? 1 : -1,
+    );
 
   let promised = 0n, returned = 0n;
   let full = 0, partial = 0, withheld = 0, verified = 0;

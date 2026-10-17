@@ -5,8 +5,14 @@ import { OUTCOME_LABEL, explorerEntityUrl, explorerAddressUrl } from "@/lib/arki
 import { inr, shortAddr, shortKey, expiryText } from "@/lib/format";
 import { Badge, Card, EmptyState } from "@/components/ui";
 import { LinkHint } from "@/components/LinkHint";
+import { WalletAvatar } from "@/components/WalletAvatar";
 
 const TONE = { returned_full: "success", returned_partial: "warn", withheld: "danger" } as const;
+const EDGE = {
+  returned_full: "border-l-success",
+  returned_partial: "border-l-warn",
+  withheld: "border-l-danger",
+} as const;
 
 export function HistoryView({ h }: { h: LandlordHistory }) {
   const pct = h.totals.count > 0 && BigInt(h.totals.promisedInr) > 0n
@@ -22,9 +28,10 @@ export function HistoryView({ h }: { h: LandlordHistory }) {
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               On-chain deposit record · {h.totals.count} outcomes · {h.terms.length} signed terms
             </p>
-            <p className="mt-1 font-mono text-sm break-all">
+            <p className="mt-1 flex items-center gap-2 font-mono text-sm">
+              <WalletAvatar address={h.landlord} size={22} />
               <a href={explorerAddressUrl(h.landlord)} target="_blank" rel="noopener noreferrer"
-                 className="text-foreground underline underline-offset-2 [@media(hover:hover)]:hover:underline">
+                 className="break-all text-foreground underline underline-offset-2 [@media(hover:hover)]:hover:underline">
                 {h.landlord}
               </a>
             </p>
@@ -32,6 +39,25 @@ export function HistoryView({ h }: { h: LandlordHistory }) {
           <div className="text-right">
             <p className="text-3xl font-medium tabular-nums">{pct}%</p>
             <p className="text-xs text-muted-foreground">of promised deposits returned</p>
+          </div>
+        </div>
+
+        {/* The money shot: the withheld gap rendered as width, not words.
+            Green = deposits that came back; the pink remainder = kept. */}
+        <div className="mt-4">
+          <div
+            role="img"
+            aria-label={`${pct}% of promised deposits returned`}
+            className="h-2 w-full overflow-hidden rounded-full bg-danger-bg"
+          >
+            <div
+              className="h-full rounded-full bg-success transition-[width] duration-500"
+              style={{ width: `${pct}%` }}
+            />
+          </div>
+          <div className="mt-1.5 flex justify-between font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+            <span>returned</span>
+            <span>withheld {h.totals.count ? 100 - pct : 0}%</span>
           </div>
         </div>
 
@@ -71,7 +97,7 @@ export function HistoryView({ h }: { h: LandlordHistory }) {
           <ul className="flex flex-col gap-3">
             {h.outcomes.map((o) => (
               <li key={o.entityKey}>
-                <Card className="p-4">
+                <Card className={`border-l-2 p-4 ${EDGE[o.outcome]}`}>
                   <div className="flex flex-wrap items-center gap-2">
                     <Badge tone={TONE[o.outcome]}>{OUTCOME_LABEL[o.outcome]}</Badge>
                     <span className="text-sm font-medium tabular-nums">
@@ -92,7 +118,10 @@ export function HistoryView({ h }: { h: LandlordHistory }) {
                     <p className="mt-2 text-sm text-muted-foreground">{o.comment}</p>
                   )}
                   <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 break-all text-xs text-muted-foreground">
-                    <span>signed by tenant <span className="font-mono">{shortAddr(o.creator)}</span></span>
+                    <span className="inline-flex items-center gap-1.5">signed by tenant
+                      <WalletAvatar address={o.creator} size={14} />
+                      <span className="font-mono">{shortAddr(o.creator)}</span>
+                    </span>
                     <span>{expiryText(o.expiresAtBlock, h.snapshotBlock)}</span>
                     <a href={explorerEntityUrl(o.entityKey)} target="_blank" rel="noopener noreferrer"
                        className="inline-flex items-center gap-1 font-mono text-foreground underline underline-offset-2 [@media(hover:hover)]:hover:underline">

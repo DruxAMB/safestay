@@ -5,6 +5,7 @@ import { isAddress, type Address } from "viem";
 import { getLandlordHistory, getProfile } from "@/lib/arkiv/queries";
 import { HistoryView } from "@/components/HistoryView";
 import { LiveWatcher } from "@/components/LiveWatcher";
+import { WalletAvatar } from "@/components/WalletAvatar";
 import { Skeleton } from "@/components/ui";
 
 export default async function LandlordPage({
@@ -17,6 +18,7 @@ export default async function LandlordPage({
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6">
       <div className="mb-5 flex flex-wrap items-center gap-3">
+        <WalletAvatar address={wallet} size={30} />
         <Suspense fallback={<h1 className="text-xl font-medium">Deposit history</h1>}>
           <LandlordTitle wallet={wallet} />
         </Suspense>
