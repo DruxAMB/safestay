@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Wallet, LogOut, AlertTriangle } from "lucide-react";
 import { useWallet } from "./WalletProvider";
 import { WalletPicker } from "./WalletPicker";
+import { WalletAvatar } from "./WalletAvatar";
 import { shortAddr } from "@/lib/format";
 
 /** Header wallet connect — the real signing path. Connected = writes are
@@ -21,18 +22,22 @@ export function ConnectWallet() {
       <span className="inline-flex items-center gap-1">
         <span
           className={`inline-flex min-h-9 items-center gap-1.5 rounded-md border px-2.5 font-mono text-xs ${
-            wrongChain ? "border-warn bg-warn-bg text-warn" : "border-border bg-card"
+            wrongChain ? "border-warn bg-warn-bg text-warn" : "border-border bg-card text-foreground"
           }`}
           title={wrongChain ? "Wallet is on the wrong network — switch to Tiramisu" : address}
         >
-          {wrongChain ? <AlertTriangle size={13} aria-hidden /> : <Wallet size={13} aria-hidden />}
+          {wrongChain ? (
+            <AlertTriangle size={13} aria-hidden />
+          ) : (
+            <WalletAvatar address={address} size={20} />
+          )}
           {wrongChain ? "wrong net" : shortAddr(address)}
         </span>
         <button
           type="button"
           onClick={disconnect}
           aria-label="Disconnect wallet"
-          className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-md text-muted-foreground [@media(hover:hover)]:hover:bg-muted"
+          className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-md text-text-inverse-muted [@media(hover:hover)]:hover:bg-white/5 [@media(hover:hover)]:hover:text-text-inverse"
         >
           <LogOut size={14} aria-hidden />
         </button>
