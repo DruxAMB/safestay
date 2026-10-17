@@ -6,8 +6,8 @@ export function inr(n: bigint | string | number): string {
   return `₹${Number(v).toLocaleString("en-IN")}`;
 }
 
-export function shortAddr(a: string): string {
-  return a.length > 12 ? `${a.slice(0, 6)}…${a.slice(-4)}` : a;
+export function shortAddr(a: string, head = 6, tail = 4): string {
+  return a.length > head + tail + 2 ? `${a.slice(0, head)}…${a.slice(-tail)}` : a;
 }
 export function shortKey(k: string): string {
   return k.length > 14 ? `${k.slice(0, 8)}…${k.slice(-6)}` : k;
