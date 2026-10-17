@@ -3,6 +3,7 @@ import Link from "next/link";
 import { io } from "next/cache";
 import { LookupForm } from "@/components/LookupForm";
 import { EntityDossier } from "@/components/EntityDossier";
+import { EntityField } from "@/components/EntityField";
 import { getHeroData, type HeroData } from "@/lib/arkiv/queries";
 import { Skeleton } from "@/components/ui";
 import AnimatedContent from "@/components/AnimatedContent";
@@ -13,8 +14,11 @@ export default function Home() {
     <div>
       {/* Hero — evidence dossier: the console is the tool, the specimen is
           a real on-chain entity, every number is live. */}
-      <section className="bg-stipple">
-        <div className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-6 sm:py-24">
+      <section className="bg-stipple relative overflow-hidden">
+        <Suspense fallback={null}>
+          <FieldSlot />
+        </Suspense>
+        <div className="relative z-10 mx-auto w-full max-w-6xl px-4 py-14 sm:px-6 sm:py-24">
           <AnimatedContent trigger="mount" distance={24} duration={0.7} stagger={0.08} className="grid gap-10 lg:grid-cols-[1.1fr_1fr] lg:gap-16">
             <div className="flex flex-col gap-5">
               <p className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
@@ -179,6 +183,14 @@ async function DossierSlot() {
     );
   }
   return <EntityDossier entity={data.featured} snapshot={data.snapshot} />;
+}
+
+/** The full-bleed 3D room behind the hero — every floating block is a real
+ *  `deposit_terms` entity. Renders nothing when the chain read fails. */
+async function FieldSlot() {
+  const { data } = await tryHeroData();
+  if (!data || data.blocks.length === 0) return null;
+  return <EntityField blocks={data.blocks} />;
 }
 
 async function StatsStrip() {

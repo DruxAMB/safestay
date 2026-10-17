@@ -302,6 +302,9 @@ export type HeroData = {
   outcomesCount: number;
   verifiedCount: number;
   featured: TermsDto | null;
+  /** Up to 8 recent terms entities, rendered as the 3D hero field — each
+   *  floating block carries a real entity key. */
+  blocks: { key: string; label: string; featured: boolean }[];
   snapshot: string;
 };
 
@@ -345,12 +348,21 @@ export async function getHeroData(): Promise<HeroData> {
         !best || BigInt(t.createdAtMs) > BigInt(best.createdAtMs) ? t : best,
       null,
     ) ?? null;
+  const blocks = [...terms]
+    .sort((a, b) => Number(BigInt(b.createdAtMs) - BigInt(a.createdAtMs)))
+    .slice(0, 8)
+    .map((t) => ({
+      key: t.entityKey,
+      label: t.city || "deposit_terms",
+      featured: featured?.entityKey === t.entityKey,
+    }));
   return {
     directory: buildDirectory(termsRes.entities, profilesRes.entities),
     termsCount: terms.length,
     outcomesCount: outcomes.length,
     verifiedCount,
     featured,
+    blocks,
     snapshot: snapshot.toString(),
   };
 }
