@@ -26,6 +26,11 @@ export const OUTCOME_LABEL: Record<Outcome, string> = {
   withheld: "Withheld",
 };
 
+/** Seeded demo landlord that gets the high-rise tower model instead of
+ *  the mid-rise L-block — Skyline Towers (scripts/add-landlord.mjs). */
+export const TOWER_LANDLORD =
+  "0x5cf8600bbadefd56a70381b8e71eb332d598b2d3" as const;
+
 export function explorerEntityUrl(key: string) {
   return `${EXPLORER}/entity/${key}`;
 }

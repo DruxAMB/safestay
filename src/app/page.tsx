@@ -5,6 +5,7 @@ import { LookupForm } from "@/components/LookupForm";
 import { InteractiveDossier } from "@/components/InteractiveDossier";
 import { HeroSelection } from "@/components/HeroSelection";
 import { BuildingScene } from "@/components/BuildingScene";
+import { HeroBuildingImg } from "@/components/HeroBuildingImg";
 import { getHeroData, type HeroData } from "@/lib/arkiv/queries";
 import { Skeleton } from "@/components/ui";
 import AnimatedContent from "@/components/AnimatedContent";
@@ -47,12 +48,7 @@ export default function Home() {
               </div>
             </div>
             <div className="relative lg:h-155">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/hero-building.png"
-                alt="Clay-render apartment tower — the glowing unit is a signed deposit record"
-                className="mx-auto lg:hidden"
-              />
+              <HeroBuildingImg />
               <div className="pointer-events-auto mt-6 lg:absolute lg:top-0 lg:left-0 lg:mt-0 lg:w-78.75">
                 <Suspense fallback={<DossierSkeleton />}>
                   <DossierSlot />
