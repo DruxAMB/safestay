@@ -3,6 +3,7 @@ import { io } from "next/cache";
 import { explorerAddressUrl } from "@/lib/arkiv/config";
 import { listDirectory } from "@/lib/arkiv/queries";
 import { Card, Skeleton } from "@/components/ui";
+import { WalletAvatar } from "@/components/WalletAvatar";
 import { ExternalLink } from "lucide-react";
 
 export const metadata = { title: "How SafeStay uses Arkiv" };
@@ -63,6 +64,7 @@ async function CreatorDirectory() {
         <li key={l.address}>
           <a href={explorerAddressUrl(l.address)} target="_blank" rel="noopener noreferrer"
              className="inline-flex flex-wrap items-center gap-2 font-mono text-sm text-foreground underline underline-offset-2 [@media(hover:hover)]:hover:underline">
+            <WalletAvatar address={l.address} size={18} />
             {l.name ? `${l.name} · ` : ""}{l.address} · {l.termsCount} terms <ExternalLink size={12} aria-hidden />
           </a>
         </li>
