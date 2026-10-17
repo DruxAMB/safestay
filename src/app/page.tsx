@@ -80,9 +80,18 @@ export default function Home() {
   );
 }
 
+/** Bound the chain read — Tiramisu is a public testnet and the path to it
+ *  can flap. The search form works by wallet address without the directory;
+ *  past the bound we render it with an honest degraded note instead of an
+ *  infinite skeleton. */
+const DIRECTORY_BOUND_MS = 10_000;
+
 async function DirectoryLookup() {
   await io();
-  const directory = await listDirectory();
+  const directory = await Promise.race([
+    listDirectory().catch(() => null),
+    new Promise<null>((res) => setTimeout(() => res(null), DIRECTORY_BOUND_MS)),
+  ]);
   return <LookupForm directory={directory} />;
 }
 

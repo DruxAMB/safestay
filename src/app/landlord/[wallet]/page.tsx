@@ -29,9 +29,22 @@ export default async function LandlordPage({
   );
 }
 
+/** Bound every chain read — Tiramisu (or the path to it) can flap. A bounded
+ *  timeout surfaces as an honest state instead of an infinite skeleton. */
+const CHAIN_BOUND_MS = 15_000;
+
+function bound<T>(p: Promise<T>, what: string): Promise<T> {
+  return Promise.race([
+    p,
+    new Promise<T>((_, rej) =>
+      setTimeout(() => rej(new Error(`${what} didn't answer in ${CHAIN_BOUND_MS / 1000}s`)), CHAIN_BOUND_MS),
+    ),
+  ]);
+}
+
 async function LandlordTitle({ wallet }: { wallet: string }) {
   await io();
-  const profile = await getProfile(wallet as Address);
+  const profile = await bound(getProfile(wallet as Address), "profile").catch(() => null);
   return (
     <h1 className="text-xl font-semibold">
       {profile?.name ? `${profile.name} — deposit history` : "Deposit history"}
@@ -41,7 +54,7 @@ async function LandlordTitle({ wallet }: { wallet: string }) {
 
 async function History({ wallet }: { wallet: string }) {
   await io();
-  const history = await getLandlordHistory(wallet as Address);
+  const history = await bound(getLandlordHistory(wallet as Address), "history");
   return <HistoryView h={history} />;
 }
 

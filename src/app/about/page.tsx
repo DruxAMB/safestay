@@ -37,7 +37,19 @@ const QUERIES = [
 
 async function CreatorDirectory() {
   await io();
-  const directory = await listDirectory();
+  // Bounded — a dead network window degrades to a note, not an infinite skeleton.
+  const directory = await Promise.race([
+    listDirectory().catch(() => null),
+    new Promise<null>((res) => setTimeout(() => res(null), 10_000)),
+  ]);
+  if (directory === null) {
+    return (
+      <p className="mt-3 text-sm text-muted-foreground">
+        The chain read didn’t answer in time — every creator wallet is still
+        visible on the Tiramisu explorer.
+      </p>
+    );
+  }
   if (directory.length === 0) {
     return (
       <p className="mt-3 text-sm text-muted-foreground">

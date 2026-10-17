@@ -53,10 +53,17 @@ async function Roles() {
   );
 }
 
+/** Bound the chain read — a hung RPC shows the route error state instead of
+ *  an infinite skeleton inside the demo panel. */
 async function DemoForms() {
   await io();
   const tenant = walletAddress("tenant");
-  const openTerms = await getOpenTermsForTenant(tenant);
+  const openTerms = await Promise.race([
+    getOpenTermsForTenant(tenant),
+    new Promise<never>((_, rej) =>
+      setTimeout(() => rej(new Error("open terms read timed out")), 15_000),
+    ),
+  ]);
   return (
     <div className="mt-5 flex flex-col gap-8">
       <section>

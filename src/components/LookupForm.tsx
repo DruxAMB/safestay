@@ -17,8 +17,11 @@ export type DirectoryEntry = {
 
 /** Landlord lookup — address OR display name. The directory below is live
  *  chain data: every wallet that ever signed deposit_terms, with names from
- *  self-signed landlord_profile entities. Nothing is hardcoded. */
-export function LookupForm({ directory }: { directory: DirectoryEntry[] }) {
+ *  self-signed landlord_profile entities. Nothing is hardcoded.
+ *  `directory: null` = the chain read didn't answer in time — the form still
+ *  works by wallet address; only chips/name-resolution are degraded. */
+export function LookupForm({ directory }: { directory: DirectoryEntry[] | null }) {
+  const entries = directory ?? [];
   const router = useRouter();
   const id = useId();
   const [value, setValue] = useState("");
@@ -38,7 +41,7 @@ export function LookupForm({ directory }: { directory: DirectoryEntry[] }) {
     }
     // name lookup against the on-chain directory
     const q = v.toLowerCase();
-    const hit = directory.find(
+    const hit = entries.find(
       (d) => d.name && (d.name.toLowerCase() === q || d.name.toLowerCase().includes(q)),
     );
     if (hit) {
@@ -47,7 +50,7 @@ export function LookupForm({ directory }: { directory: DirectoryEntry[] }) {
       return;
     }
     setError(
-      directory.length
+      entries.length
         ? "No registered landlord matches — try a wallet address, or pick from the directory."
         : "Enter a wallet address (0x + 40 hex).",
     );
@@ -83,7 +86,7 @@ export function LookupForm({ directory }: { directory: DirectoryEntry[] }) {
         Landlord directory — read live from Arkiv
       </p>
       <div className="mt-2 flex flex-wrap gap-2">
-        {directory.map((l) => (
+        {entries.map((l) => (
           <button
             key={l.address}
             type="button"
@@ -96,7 +99,13 @@ export function LookupForm({ directory }: { directory: DirectoryEntry[] }) {
             </span>
           </button>
         ))}
-        {directory.length === 0 && (
+        {directory === null && (
+          <p className="text-sm text-muted-foreground">
+            The directory didn’t answer in time — search by wallet address
+            above still works.
+          </p>
+        )}
+        {directory !== null && entries.length === 0 && (
           <p className="text-sm text-muted-foreground">
             No landlords have signed terms yet — be the first via Record.
           </p>
