@@ -90,7 +90,7 @@ export function LookupForm({ directory }: { directory: DirectoryEntry[] | null }
           <button
             key={l.address}
             type="button"
-            onClick={() => go(l.address)}
+            onClick={() => { setValue(l.address); setError(null); }}
             className="inline-flex min-h-11 items-center gap-2 rounded-full border border-border bg-card px-4 text-sm [@media(hover:hover)]:hover:border-primary [@media(hover:hover)]:hover:bg-primary/5"
           >
             <span className="font-medium">{l.name ?? shortAddr(l.address)}</span>
