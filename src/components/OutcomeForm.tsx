@@ -8,6 +8,7 @@ import { OUTCOME_LABEL, explorerEntityUrl, explorerTxUrl } from "@/lib/arkiv/con
 import { inr, shortAddr } from "@/lib/format";
 import { Button, Card, EmptyState, Input, Label, Badge } from "@/components/ui";
 import { useToast } from "@/components/Toaster";
+import { LinkHint } from "./LinkHint";
 import { friendlyError } from "@/lib/errors";
 import { ExternalLink, FileUp, Loader2 } from "lucide-react";
 
@@ -117,6 +118,7 @@ export function OutcomeForm({
           <Link href={`/landlord/${selected.creator}`}>
             <Button variant="secondary" className="mt-5">
               See it on the landlord’s history →
+              <LinkHint />
             </Button>
           </Link>
         )}

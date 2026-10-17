@@ -4,6 +4,7 @@ import type { LandlordHistory } from "@/lib/arkiv/schema";
 import { OUTCOME_LABEL, explorerEntityUrl, explorerAddressUrl } from "@/lib/arkiv/config";
 import { inr, shortAddr, shortKey, expiryText } from "@/lib/format";
 import { Badge, Card, EmptyState } from "@/components/ui";
+import { LinkHint } from "@/components/LinkHint";
 
 const TONE = { returned_full: "success", returned_partial: "warn", withheld: "danger" } as const;
 
@@ -151,6 +152,7 @@ export function HistoryView({ h }: { h: LandlordHistory }) {
         creator’s wallet — the list cannot be edited by this site.{" "}
         <Link href="/about" className="text-foreground underline underline-offset-2 [@media(hover:hover)]:hover:underline">
           How the trust model works
+          <LinkHint />
         </Link>
       </p>
     </div>

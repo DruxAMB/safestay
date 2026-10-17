@@ -8,6 +8,7 @@ import { BuildingScene } from "@/components/BuildingScene";
 import { HeroBuildingImg } from "@/components/HeroBuildingImg";
 import { getHeroData, type HeroData } from "@/lib/arkiv/queries";
 import { Skeleton } from "@/components/ui";
+import { LinkHint } from "@/components/LinkHint";
 import AnimatedContent from "@/components/AnimatedContent";
 import { ShieldCheck, FileSignature, Eye, Timer } from "lucide-react";
 
@@ -103,12 +104,14 @@ export default function Home() {
               className="inline-flex min-h-11 items-center gap-2 rounded-sm bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors [@media(hover:hover)]:hover:bg-primary/90"
             >
               <FileSignature size={16} aria-hidden /> Record on Arkiv
+              <LinkHint />
             </Link>
             <Link
               href="/feed"
               className="inline-flex min-h-11 items-center gap-2 rounded-sm border border-border-inverse px-4 text-sm font-medium text-text-inverse transition-colors [@media(hover:hover)]:hover:bg-white/5"
             >
               <ShieldCheck size={16} aria-hidden className="text-primary" /> Watch the live ledger
+              <LinkHint />
             </Link>
           </div>
         </AnimatedContent>

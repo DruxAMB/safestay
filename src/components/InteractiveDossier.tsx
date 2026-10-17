@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { EntityDossier } from "./EntityDossier";
+import { LinkHint } from "./LinkHint";
 import { useHeroSelection } from "./HeroSelection";
 import { shortAddr } from "@/lib/format";
 import type { TermsDto } from "@/lib/arkiv/schema";
@@ -65,6 +66,7 @@ export function InteractiveDossier({
           className="mt-3 inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-widest text-foreground [@media(hover:hover)]:hover:text-primary"
         >
           View full history — {shortAddr(selected)} <ArrowRight size={12} aria-hidden />
+          <LinkHint />
         </Link>
       )}
       {live.length > 0 && (

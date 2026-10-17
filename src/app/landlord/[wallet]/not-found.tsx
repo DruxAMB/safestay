@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui";
+import { LinkHint } from "@/components/LinkHint";
 
 export default function NotFound() {
   return (
@@ -10,7 +11,7 @@ export default function NotFound() {
           A Tiramisu wallet address is <code className="font-mono">0x</code> plus 40
           hexadecimal characters. Check the address and try again.
         </p>
-        <Link href="/"><Button variant="secondary" className="mt-4">Back to lookup</Button></Link>
+        <Link href="/"><Button variant="secondary" className="mt-4">Back to lookup <LinkHint /></Button></Link>
       </div>
     </div>
   );

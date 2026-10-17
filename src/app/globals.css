@@ -95,6 +95,30 @@ body {
 .rise-out { animation: fade-out 160ms ease-in both; }
 .pop-in { animation: pop-in 180ms cubic-bezier(0.21, 1.02, 0.73, 1) both; }
 
+/* Navigation pending hint — reserved space, invisible until a slow
+ *  navigation proves it needs to exist (fade-in delayed 100ms, then pulse). */
+.link-hint {
+  display: inline-block;
+  width: 0.55em;
+  height: 0.55em;
+  margin-left: 0.3rem;
+  border-radius: 9999px;
+  background: currentColor;
+  opacity: 0;
+  visibility: hidden;
+}
+.link-hint.is-pending {
+  visibility: visible;
+  animation-name: hint-in, hint-pulse;
+  animation-duration: 200ms, 1s;
+  animation-delay: 100ms, 100ms;
+  animation-timing-function: ease, ease-in-out;
+  animation-iteration-count: 1, infinite;
+  animation-fill-mode: forwards, none;
+}
+@keyframes hint-in { to { opacity: 0.4; } }
+@keyframes hint-pulse { 50% { opacity: 0.15; } }
+
 /* Focus ring — visible on every interactive element, token-driven. */
 :where(a, button, input, select, textarea, [tabindex]):focus-visible {
   outline: 2px solid var(--ring);

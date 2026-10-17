@@ -1,8 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useId } from "react";
-import { ArrowRight, Search } from "lucide-react";
+import { useState, useId, useTransition } from "react";
+import { ArrowRight, Loader2, Search } from "lucide-react";
 import { Button, Input, Label } from "@/components/ui";
 import { shortAddr } from "@/lib/format";
 import { TOWER_LANDLORD } from "@/lib/arkiv/config";
@@ -33,6 +33,9 @@ export function LookupForm({ directory, directoryNote }: {
   const id = useId();
   const [typed, setTyped] = useState("");
   const [error, setError] = useState<string | null>(null);
+  // router.push in a transition — isPending stays true until the landlord
+  // page commits, so the button shows the navigation is in flight.
+  const [navPending, startNav] = useTransition();
   // Selection lives in hero context — chips and clicking a lit unit in the
   // building both land here. While something is picked the input shows the
   // picked address; the first keystroke clears it and the field is yours.
@@ -42,7 +45,7 @@ export function LookupForm({ directory, directoryNote }: {
   const value = picked ?? typed;
 
   function go(addr: string) {
-    router.push(`/landlord/${addr.trim()}`);
+    startNav(() => router.push(`/landlord/${addr.trim()}`));
   }
 
   function pick(l: DirectoryEntry) {
@@ -101,8 +104,10 @@ export function LookupForm({ directory, directoryNote }: {
             className="font-mono"
           />
         </div>
-        <Button type="submit" disabled={!value.trim()}>
-          {picked ? (
+        <Button type="submit" disabled={!value.trim() || navPending}>
+          {navPending ? (
+            <><Loader2 size={16} className="animate-spin" aria-hidden /> Loading…</>
+          ) : picked ? (
             <>View full history <ArrowRight size={16} aria-hidden /></>
           ) : (
             <><Search size={16} aria-hidden /> Check history</>
