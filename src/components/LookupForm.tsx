@@ -18,9 +18,13 @@ export type DirectoryEntry = {
 /** Landlord lookup — address OR display name. The directory below is live
  *  chain data: every wallet that ever signed deposit_terms, with names from
  *  self-signed landlord_profile entities. Nothing is hardcoded.
- *  `directory: null` = the chain read didn't answer in time — the form still
- *  works by wallet address; only chips/name-resolution are degraded. */
-export function LookupForm({ directory }: { directory: DirectoryEntry[] | null }) {
+ *  `directory: null` = the chain read failed — `directoryNote` names the real
+ *  cause (timeout, quota, error). The form still works by wallet address;
+ *  only chips/name-resolution are degraded. */
+export function LookupForm({ directory, directoryNote }: {
+  directory: DirectoryEntry[] | null;
+  directoryNote?: string;
+}) {
   const entries = directory ?? [];
   const router = useRouter();
   const id = useId();
@@ -101,8 +105,8 @@ export function LookupForm({ directory }: { directory: DirectoryEntry[] | null }
         ))}
         {directory === null && (
           <p className="text-sm text-muted-foreground">
-            The directory didn’t answer in time — search by wallet address
-            above still works.
+            {directoryNote ??
+              "The directory is unavailable — search by wallet address above still works."}
           </p>
         )}
         {directory !== null && entries.length === 0 && (

@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { io } from "next/cache";
-import { LookupForm } from "@/components/LookupForm";
+import { LookupForm, type DirectoryEntry } from "@/components/LookupForm";
 import { listDirectory } from "@/lib/arkiv/queries";
 import { Skeleton } from "@/components/ui";
 import AnimatedContent from "@/components/AnimatedContent";
@@ -17,7 +17,7 @@ export default function Home() {
           <p className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
             For renters in India · powered by Arkiv
           </p>
-          <h1 className="max-w-3xl text-5xl leading-[1.02] tracking-tight sm:text-6xl md:text-7xl">
+          <h1 className="max-w-3xl text-4xl leading-[1.02] tracking-tight sm:text-5xl md:text-6xl">
             Check a landlord’s deposit history before you pay.
           </h1>
           <p className="max-w-xl text-lg text-muted-foreground">
@@ -88,18 +88,44 @@ export default function Home() {
 }
 
 /** Bound the chain read — Tiramisu is a public testnet and the path to it
- *  can flap. The search form works by wallet address without the directory;
- *  past the bound we render it with an honest degraded note instead of an
+ *  can flap, and the anonymous query budget can be exhausted. The search
+ *  form works by wallet address without the directory; on failure we
+ *  render it with an honest note naming the real cause instead of an
  *  infinite skeleton. */
 const DIRECTORY_BOUND_MS = 10_000;
 
+type DirectoryResult =
+  | { directory: DirectoryEntry[]; note?: undefined }
+  | { directory: null; note: string };
+
+function directoryFailure(e: unknown): string {
+  const msg = e instanceof Error ? e.message : String(e);
+  if (/ANON_COST_LIMITED|cost limit|quota|budget/i.test(msg)) {
+    return "The testnet's public query budget is exhausted right now — search by wallet address above still works.";
+  }
+  return "The directory read failed — search by wallet address above still works.";
+}
+
 async function DirectoryLookup() {
   await io();
-  const directory = await Promise.race([
-    listDirectory().catch(() => null),
-    new Promise<null>((res) => setTimeout(() => res(null), DIRECTORY_BOUND_MS)),
+  const result = await Promise.race<DirectoryResult>([
+    listDirectory().then(
+      (directory) => ({ directory }),
+      (e) => ({ directory: null, note: directoryFailure(e) }),
+    ),
+    new Promise<DirectoryResult>((res) =>
+      setTimeout(
+        () =>
+          res({
+            directory: null,
+            note: "The directory didn’t answer in time — search by wallet address above still works.",
+          }),
+        DIRECTORY_BOUND_MS,
+      ),
+    ),
   ]);
-  const termsCount = directory?.reduce((sum, l) => sum + l.termsCount, 0) ?? 0;
+  const termsCount =
+    result.directory?.reduce((sum, l) => sum + l.termsCount, 0) ?? 0;
   return (
     <div>
       {termsCount > 0 && (
@@ -110,7 +136,7 @@ async function DirectoryLookup() {
           deposit terms signed on Arkiv — every one queryable, even if we vanished
         </p>
       )}
-      <LookupForm directory={directory} />
+      <LookupForm directory={result.directory} directoryNote={result.note} />
     </div>
   );
 }

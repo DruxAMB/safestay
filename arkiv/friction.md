@@ -125,6 +125,18 @@ document the anonymous cost budget (requests/sec? compute units?) — "ANON_COST
 tells you that you paid too much, not what the budget is. A hosted-RPC-key story for
 production apps would close this entirely.
 
+**Update.** Reproduced again later — and the error has a *second shape* clients must
+handle: `arkiv_query` rejected in 154ms with a JSON-RPC error on **HTTP 200** —
+`{"error":"ANON_COST_LIMITED","message":"unauthenticated query budget exhausted; get an
+API key at https://hub.arkiv.network for a monthly quota"}` — while `eth_chainId` and
+`eth_blockNumber` on the same endpoint answered fine (~800ms). Two consequences: (a) a
+plain "is the RPC up?" health check can pass while every query is being rejected — check
+`arkiv_query` specifically; (b) viem's 429-based retry does not engage on the HTTP-200
+shape, so bounded-call + degrade is the correct client posture, not retries. The good
+news inside the error: API keys now exist — the reader takes an optional `X-API-KEY`
+header (`ARKIV_API_KEY` server env) for a monthly quota, keeping the keyless path as the
+default so the reads stay publicly reproducible.
+
 ## What went smoothly (worth keeping)
 
 - `executeBatch` atomicity made the two-way-linked outcome+evidence pattern trivially safe.

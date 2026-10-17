@@ -7,12 +7,17 @@ import { TIRAMISU_HTTP, TIRAMISU_WS } from "./config";
 
 export type ArkivReader = ReturnType<typeof createReader>;
 
-/** Public read client — no wallet, no key. Judges' path.
+/** Public read client — no wallet; keyless by default (judges' path,
+ *  anyone can run the same reads). Optional ARKIV_API_KEY rides as an
+ *  X-API-KEY header for a higher query budget — server env only, never
+ *  in the browser bundle.
  *  cacheTime:0 + no-store per arkiv-app-integration guidance.
- *  retryCount: the public RPC anonymous-cost-limits bursts (HTTP 429
- *  ANON_COST_LIMITED) — viem retries 429 natively. batch: Tiramisu accepts
+ *  NOTE: ANON_COST_LIMITED arrives as a JSON-RPC error on HTTP 200, not
+ *  a 429 — viem's status-based retry does not engage on it. The bound is
+ *  the caller's race, not this retry count. batch: Tiramisu accepts
  *  JSON-RPC batches, so concurrent reads coalesce into one request. */
 export function createReader() {
+  const accessKey = process.env.ARKIV_API_KEY;
   return createPublicClient({
     chain: tiramisu,
     cacheTime: 0,
@@ -21,7 +26,11 @@ export function createReader() {
       retryCount: 4,
       retryDelay: 600,
       batch: { batchSize: 32, wait: 20 },
-      fetchOptions: { cache: "no-store", redirect: "error" },
+      fetchOptions: {
+        cache: "no-store",
+        redirect: "error",
+        ...(accessKey ? { headers: { "X-API-KEY": accessKey } } : {}),
+      },
     }),
   });
 }
