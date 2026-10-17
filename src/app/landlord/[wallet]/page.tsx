@@ -17,7 +17,7 @@ export default async function LandlordPage({
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6">
       <div className="mb-5 flex flex-wrap items-center gap-3">
-        <Suspense fallback={<h1 className="text-xl font-semibold">Deposit history</h1>}>
+        <Suspense fallback={<h1 className="text-xl font-medium">Deposit history</h1>}>
           <LandlordTitle wallet={wallet} />
         </Suspense>
         <LiveWatcher landlord={wallet} />
@@ -46,7 +46,7 @@ async function LandlordTitle({ wallet }: { wallet: string }) {
   await io();
   const profile = await bound(getProfile(wallet as Address), "profile").catch(() => null);
   return (
-    <h1 className="text-xl font-semibold">
+    <h1 className="text-xl font-medium">
       {profile?.name ? `${profile.name} — deposit history` : "Deposit history"}
     </h1>
   );

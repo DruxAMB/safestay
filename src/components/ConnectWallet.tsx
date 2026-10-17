@@ -45,10 +45,11 @@ export function ConnectWallet() {
       <button
         type="button"
         onClick={() => setPickerOpen(true)}
-        className="inline-flex min-h-9 items-center gap-1.5 rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground [@media(hover:hover)]:hover:bg-primary/90"
+        className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-sm bg-primary px-3 text-xs font-medium text-primary-foreground [@media(hover:hover)]:hover:bg-primary/90"
+        aria-label="Connect wallet"
       >
         <Wallet size={13} aria-hidden />
-        Connect wallet
+        <span className="hidden sm:inline">Connect wallet</span>
       </button>
       <WalletPicker open={pickerOpen} onClose={() => setPickerOpen(false)} />
     </>

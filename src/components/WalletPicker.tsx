@@ -62,7 +62,7 @@ export function WalletPicker({
         className="w-full rounded-t-2xl border border-border bg-card p-5 sm:max-w-sm sm:rounded-2xl"
       >
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Connect a wallet</h2>
+          <h2 className="text-lg font-medium">Connect a wallet</h2>
           <button
             type="button"
             onClick={onClose}
@@ -105,7 +105,7 @@ export function WalletPicker({
               <Wallet size={18} aria-hidden className="text-muted-foreground" />
               Browser default wallet
               {connectingUid === "default" && (
-                <span className="ml-auto h-3.5 w-3.5 animate-spin rounded-full border-2 border-muted border-t-primary" />
+                <span className="ml-auto h-3.5 w-3.5 animate-spin rounded-full border-2 border-muted border-t-foreground" />
               )}
             </button>
           )}
@@ -153,7 +153,7 @@ function WalletRow({
       {wallet.info.name}
       {busy && (
         <span className="ml-auto flex items-center gap-1.5 text-xs text-muted-foreground">
-          <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-muted border-t-primary" />
+          <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-muted border-t-foreground" />
           continue in wallet
         </span>
       )}

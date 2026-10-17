@@ -12,7 +12,7 @@ import { shortAddr } from "@/lib/format";
 export default function RecordPage() {
   return (
     <div className="mx-auto w-full max-w-2xl px-4 py-8 sm:px-6">
-      <h1 className="text-xl font-semibold">Write to Arkiv</h1>
+      <h1 className="text-xl font-medium">Write to Arkiv</h1>
       <p className="mt-2 text-sm text-muted-foreground">
         Tenants record outcomes against landlord-signed terms; landlords sign the terms.
         With a wallet connected, <em>you</em> sign every entity yourself.
@@ -67,7 +67,7 @@ async function DemoForms() {
   return (
     <div className="mt-5 flex flex-col gap-8">
       <section>
-        <h2 className="mb-3 font-semibold">Record an outcome as demo tenant</h2>
+        <h2 className="mb-3 font-medium">Record an outcome as demo tenant</h2>
         <OutcomeForm
           openTerms={openTerms}
           onSubmit={recordOutcomeAction}
@@ -83,7 +83,7 @@ async function DemoForms() {
         />
       </section>
       <section>
-        <h2 className="mb-3 font-semibold">Sign terms as demo landlord</h2>
+        <h2 className="mb-3 font-medium">Sign terms as demo landlord</h2>
         <TermsForm
           defaultTenant={tenant}
           onSubmit={recordTermsAction}
@@ -102,8 +102,8 @@ async function DemoForms() {
 function RolesSkeleton() {
   return (
     <div className="mt-2 flex gap-2" aria-busy>
-      <Skeleton className="h-6 w-32 rounded-full" />
-      <Skeleton className="h-6 w-32 rounded-full" />
+      <Skeleton className="h-6 w-32 rounded-sm" />
+      <Skeleton className="h-6 w-32 rounded-sm" />
     </div>
   );
 }

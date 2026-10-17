@@ -23,13 +23,13 @@ export function HistoryView({ h }: { h: LandlordHistory }) {
             </p>
             <p className="mt-1 font-mono text-sm break-all">
               <a href={explorerAddressUrl(h.landlord)} target="_blank" rel="noopener noreferrer"
-                 className="text-primary underline-offset-2 [@media(hover:hover)]:hover:underline">
+                 className="text-foreground underline underline-offset-2 [@media(hover:hover)]:hover:underline">
                 {h.landlord}
               </a>
             </p>
           </div>
           <div className="text-right">
-            <p className="text-3xl font-semibold tabular-nums">{pct}%</p>
+            <p className="text-3xl font-medium tabular-nums">{pct}%</p>
             <p className="text-xs text-muted-foreground">of promised deposits returned</p>
           </div>
         </div>
@@ -37,28 +37,28 @@ export function HistoryView({ h }: { h: LandlordHistory }) {
         <dl className="mt-5 grid grid-cols-2 gap-3 text-center sm:grid-cols-4">
           <div className="rounded-md bg-muted p-3">
             <dt className="text-xs text-muted-foreground">Promised</dt>
-            <dd className="mt-1 font-semibold tabular-nums">{inr(h.totals.promisedInr)}</dd>
+            <dd className="mt-1 font-medium tabular-nums">{inr(h.totals.promisedInr)}</dd>
           </div>
           <div className="rounded-md bg-muted p-3">
             <dt className="text-xs text-muted-foreground">Returned</dt>
-            <dd className="mt-1 font-semibold tabular-nums">{inr(h.totals.returnedInr)}</dd>
+            <dd className="mt-1 font-medium tabular-nums">{inr(h.totals.returnedInr)}</dd>
           </div>
           <div className="rounded-md bg-muted p-3">
             <dt className="text-xs text-muted-foreground">Withheld</dt>
-            <dd className="mt-1 font-semibold tabular-nums text-danger">
+            <dd className="mt-1 font-medium tabular-nums text-danger">
               {inr((BigInt(h.totals.promisedInr) - BigInt(h.totals.returnedInr)).toString())}
             </dd>
           </div>
           <div className="rounded-md bg-muted p-3">
             <dt className="text-xs text-muted-foreground">Verified links</dt>
-            <dd className="mt-1 font-semibold tabular-nums">{h.totals.verified}/{h.totals.count}</dd>
+            <dd className="mt-1 font-medium tabular-nums">{h.totals.verified}/{h.totals.count}</dd>
           </div>
         </dl>
       </Card>
 
       {/* Outcome records */}
       <section aria-label="Deposit outcomes">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+        <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-muted-foreground">
           Outcomes recorded by tenants
         </h2>
         {h.outcomes.length === 0 ? (
@@ -94,12 +94,12 @@ export function HistoryView({ h }: { h: LandlordHistory }) {
                     <span>signed by tenant <span className="font-mono">{shortAddr(o.creator)}</span></span>
                     <span>{expiryText(o.expiresAtBlock, h.snapshotBlock)}</span>
                     <a href={explorerEntityUrl(o.entityKey)} target="_blank" rel="noopener noreferrer"
-                       className="inline-flex items-center gap-1 font-mono text-primary underline-offset-2 [@media(hover:hover)]:hover:underline">
+                       className="inline-flex items-center gap-1 font-mono text-foreground underline underline-offset-2 [@media(hover:hover)]:hover:underline">
                       {shortKey(o.entityKey)} <ExternalLink size={11} aria-hidden />
                     </a>
                     {o.termsKey && (
                       <a href={explorerEntityUrl(o.termsKey)} target="_blank" rel="noopener noreferrer"
-                         className="inline-flex items-center gap-1 font-mono text-primary underline-offset-2 [@media(hover:hover)]:hover:underline">
+                         className="inline-flex items-center gap-1 font-mono text-foreground underline underline-offset-2 [@media(hover:hover)]:hover:underline">
                         <FileCheck2 size={11} aria-hidden /> terms {shortKey(o.termsKey)}
                       </a>
                     )}
@@ -113,7 +113,7 @@ export function HistoryView({ h }: { h: LandlordHistory }) {
 
       {/* Signed terms */}
       <section aria-label="Signed terms">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+        <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-muted-foreground">
           Terms signed by this landlord
         </h2>
         {h.terms.length === 0 ? (
@@ -128,14 +128,14 @@ export function HistoryView({ h }: { h: LandlordHistory }) {
                 <Card className="p-4">
                   <div className="flex items-center justify-between gap-2">
                     <p className="font-medium">{t.displayLabel || t.propertyLabel}</p>
-                    <span className="font-semibold tabular-nums">{inr(t.depositInr)}</span>
+                    <span className="font-medium tabular-nums">{inr(t.depositInr)}</span>
                   </div>
                   <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
                     <span>tenant <span className="font-mono">{shortAddr(t.tenant)}</span></span>
                     <span>{t.city}</span>
                     <span>{expiryText(t.expiresAtBlock, h.snapshotBlock)}</span>
                     <a href={explorerEntityUrl(t.entityKey)} target="_blank" rel="noopener noreferrer"
-                       className="inline-flex items-center gap-1 font-mono text-primary underline-offset-2 [@media(hover:hover)]:hover:underline">
+                       className="inline-flex items-center gap-1 font-mono text-foreground underline underline-offset-2 [@media(hover:hover)]:hover:underline">
                       {shortKey(t.entityKey)} <ExternalLink size={11} aria-hidden />
                     </a>
                   </div>
@@ -149,7 +149,7 @@ export function HistoryView({ h }: { h: LandlordHistory }) {
       <p className="text-xs text-muted-foreground">
         Read at block {h.snapshotBlock} on Tiramisu. Every record is an Arkiv entity signed by its
         creator’s wallet — the list cannot be edited by this site.{" "}
-        <Link href="/about" className="text-primary underline-offset-2 [@media(hover:hover)]:hover:underline">
+        <Link href="/about" className="text-foreground underline underline-offset-2 [@media(hover:hover)]:hover:underline">
           How the trust model works
         </Link>
       </p>

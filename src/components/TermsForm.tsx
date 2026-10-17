@@ -63,12 +63,12 @@ export function TermsForm({
         </p>
         <div className="mt-4 flex flex-col gap-2 font-mono text-sm">
           <a href={explorerEntityUrl(result.entityKey)} target="_blank" rel="noopener noreferrer"
-             className="inline-flex items-center gap-1 break-all text-primary underline-offset-2 [@media(hover:hover)]:hover:underline">
+             className="inline-flex items-center gap-1 break-all text-foreground underline underline-offset-2 [@media(hover:hover)]:hover:underline">
             terms {result.entityKey} <ExternalLink size={12} aria-hidden />
           </a>
           {result.txHash !== "0x0" && (
             <a href={explorerTxUrl(result.txHash)} target="_blank" rel="noopener noreferrer"
-               className="inline-flex items-center gap-1 break-all text-primary underline-offset-2 [@media(hover:hover)]:hover:underline">
+               className="inline-flex items-center gap-1 break-all text-foreground underline underline-offset-2 [@media(hover:hover)]:hover:underline">
               tx {result.txHash} <ExternalLink size={12} aria-hidden />
             </a>
           )}

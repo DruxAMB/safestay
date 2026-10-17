@@ -62,7 +62,7 @@ async function CreatorDirectory() {
       {directory.map((l) => (
         <li key={l.address}>
           <a href={explorerAddressUrl(l.address)} target="_blank" rel="noopener noreferrer"
-             className="inline-flex flex-wrap items-center gap-2 font-mono text-sm text-primary underline-offset-2 [@media(hover:hover)]:hover:underline">
+             className="inline-flex flex-wrap items-center gap-2 font-mono text-sm text-foreground underline underline-offset-2 [@media(hover:hover)]:hover:underline">
             {l.name ? `${l.name} · ` : ""}{l.address} · {l.termsCount} terms <ExternalLink size={12} aria-hidden />
           </a>
         </li>
@@ -74,7 +74,7 @@ async function CreatorDirectory() {
 export default function AboutPage() {
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6">
-      <h1 className="text-2xl font-semibold">How SafeStay uses Arkiv</h1>
+      <h1 className="text-2xl font-medium">How SafeStay uses Arkiv</h1>
       <p className="mt-3 text-muted-foreground">
         SafeStay is a deposit-truth registry for Indian renters. Deposits and PG advances
         of ₹20k–₹1L+ change hands with no verifiable history — this app puts the truth on
@@ -82,7 +82,7 @@ export default function AboutPage() {
       </p>
 
       <section className="mt-8">
-        <h2 className="font-semibold">The trust model — why fake reviews can’t exist</h2>
+        <h2 className="font-medium">The trust model — why fake reviews can’t exist</h2>
         <div className="mt-3 flex flex-col gap-3 text-sm text-muted-foreground">
           <p>
             A landlord signs <code className="font-mono">deposit_terms</code> naming a tenant
@@ -99,7 +99,7 @@ export default function AboutPage() {
       </section>
 
       <section className="mt-8">
-        <h2 className="font-semibold">Why Arkiv and not Postgres / IPFS / an API</h2>
+        <h2 className="font-medium">Why Arkiv and not Postgres / IPFS / an API</h2>
         <ul className="mt-3 list-disc space-y-1.5 pl-5 text-sm text-muted-foreground">
           <li><strong>Postgres</strong> — whoever runs the site can edit or delete any record. The whole point is that nobody can.</li>
           <li><strong>IPFS</strong> — content-addressed but not queryable: “give me every outcome about this wallet” has no answer.</li>
@@ -108,7 +108,7 @@ export default function AboutPage() {
       </section>
 
       <section className="mt-8">
-        <h2 className="font-semibold">Arkiv features → what you see</h2>
+        <h2 className="font-medium">Arkiv features → what you see</h2>
         <ul className="mt-3 list-disc space-y-1.5 pl-5 text-sm text-muted-foreground">
           <li><code className="font-mono">$creator</code> + cross-referenced terms → “verified link” badges.</li>
           <li>Typed attributes (<code className="font-mono">addr</code>, <code className="font-mono">u256</code>, <code className="font-mono">key</code>, <code className="font-mono">u64</code>) → the exact queries below, no server-side sort.</li>
@@ -120,7 +120,7 @@ export default function AboutPage() {
       </section>
 
       <section className="mt-8">
-        <h2 className="font-semibold">Exact queries</h2>
+        <h2 className="font-medium">Exact queries</h2>
         <div className="mt-3 flex flex-col gap-3">
           {QUERIES.map((q) => (
             <Card key={q.name} className="p-4">
@@ -133,7 +133,7 @@ export default function AboutPage() {
       </section>
 
       <section className="mt-8">
-        <h2 className="font-semibold">Creator wallets — read live from Arkiv</h2>
+        <h2 className="font-medium">Creator wallets — read live from Arkiv</h2>
         <p className="mt-2 text-sm text-muted-foreground">
           Every wallet below signed at least one <code className="font-mono">deposit_terms</code>{" "}
           entity — this list is a live query, not a config file. Seeded identities are synthetic
@@ -151,7 +151,7 @@ export default function AboutPage() {
       </section>
 
       <section className="mt-8 text-sm text-muted-foreground">
-        <h2 className="font-semibold text-foreground">Kept off Arkiv, deliberately</h2>
+        <h2 className="font-medium text-foreground">Kept off Arkiv, deliberately</h2>
         <p className="mt-2">
           Photos, names, phone numbers and exact addresses never touch the chain. Evidence is a
           SHA-256 hash only — the file stays with the tenant. See{" "}

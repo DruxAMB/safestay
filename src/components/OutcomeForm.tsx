@@ -74,24 +74,24 @@ export function OutcomeForm({
     return (
       <Card className="p-6" role="status">
         <Badge tone="success">Recorded on Arkiv</Badge>
-        <h2 className="mt-3 font-semibold">Outcome + evidence landed in one atomic batch</h2>
+        <h2 className="mt-3 font-medium">Outcome + evidence landed in one atomic batch</h2>
         <p className="mt-2 text-sm text-muted-foreground">
           Both entities are public on Tiramisu — the landlord’s history page updates live.
         </p>
         <div className="mt-4 flex flex-col gap-2 font-mono text-sm">
           <a href={explorerEntityUrl(result.entityKey)} target="_blank" rel="noopener noreferrer"
-             className="inline-flex items-center gap-1 break-all text-primary underline-offset-2 [@media(hover:hover)]:hover:underline">
+             className="inline-flex items-center gap-1 break-all text-foreground underline underline-offset-2 [@media(hover:hover)]:hover:underline">
             outcome {result.entityKey} <ExternalLink size={12} aria-hidden />
           </a>
           {result.extra && (
             <a href={explorerEntityUrl(result.extra)} target="_blank" rel="noopener noreferrer"
-               className="inline-flex items-center gap-1 break-all text-primary underline-offset-2 [@media(hover:hover)]:hover:underline">
+               className="inline-flex items-center gap-1 break-all text-foreground underline underline-offset-2 [@media(hover:hover)]:hover:underline">
               evidence {result.extra} <ExternalLink size={12} aria-hidden />
             </a>
           )}
           {result.txHash !== "0x0" && (
             <a href={explorerTxUrl(result.txHash)} target="_blank" rel="noopener noreferrer"
-               className="inline-flex items-center gap-1 break-all text-primary underline-offset-2 [@media(hover:hover)]:hover:underline">
+               className="inline-flex items-center gap-1 break-all text-foreground underline underline-offset-2 [@media(hover:hover)]:hover:underline">
               tx {result.txHash} <ExternalLink size={12} aria-hidden />
             </a>
           )}
@@ -142,7 +142,7 @@ export function OutcomeForm({
               onClick={() => setOutcome(o)}
               className={`min-h-11 rounded-md border px-2 text-sm font-medium ${
                 outcome === o
-                  ? "border-primary bg-primary/10 text-primary"
+                  ? "border-foreground bg-primary/30 text-foreground"
                   : "border-border bg-card [@media(hover:hover)]:hover:bg-muted"
               }`}
             >

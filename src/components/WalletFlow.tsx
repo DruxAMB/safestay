@@ -70,7 +70,7 @@ export function WalletFlow() {
   if (!address) {
     return (
       <Card className="mt-6 p-5">
-        <h2 className="font-semibold">Sign with your own wallet</h2>
+        <h2 className="font-medium">Sign with your own wallet</h2>
         <p className="mt-1.5 text-sm text-muted-foreground">
           Connect an EIP-1193 wallet (MetaMask etc.) and SafeStay will switch it to Tiramisu.
           Every entity you create is signed by <em>your</em> address — the creator provenance
@@ -165,7 +165,7 @@ function LandlordTab({ me, myTerms, onChanged }: { me: Address; myTerms: MyTerms
       />
 
       <section aria-label="My signed terms">
-        <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+        <h3 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
           Your signed terms ({myTerms.length})
         </h3>
         {myTerms.length === 0 ? (
@@ -180,7 +180,7 @@ function LandlordTab({ me, myTerms, onChanged }: { me: Address; myTerms: MyTerms
                 </span>
                 <span className="ml-auto inline-flex items-center gap-2">
                   <a href={explorerEntityUrl(t.key)} target="_blank" rel="noopener noreferrer"
-                     className="inline-flex items-center gap-1 font-mono text-xs text-primary underline-offset-2 [@media(hover:hover)]:hover:underline">
+                     className="inline-flex items-center gap-1 font-mono text-xs text-foreground underline underline-offset-2 [@media(hover:hover)]:hover:underline">
                     {shortAddr(t.key)} <ExternalLink size={11} aria-hidden />
                   </a>
                   <Button

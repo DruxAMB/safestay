@@ -11,10 +11,10 @@ export default function Home() {
     <div className="mx-auto w-full max-w-5xl px-4 sm:px-6">
       {/* Hero — one scroll, straight into the tool. The lookup is the app. */}
       <section className="flex flex-col gap-5 py-14 sm:py-20">
-        <p className="text-sm font-medium uppercase tracking-wide text-primary">
+        <p className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
           For renters in India · powered by Arkiv
         </p>
-        <h1 className="max-w-2xl text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
+        <h1 className="max-w-2xl text-4xl font-medium leading-tight tracking-tight sm:text-5xl">
           Check a landlord’s deposit history before you pay.
         </h1>
         <p className="max-w-xl text-lg text-muted-foreground">
@@ -30,7 +30,7 @@ export default function Home() {
 
       {/* How it works — 3 steps */}
       <section className="border-t border-border py-10" aria-label="How it works">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+        <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
           How it works
         </h2>
         <ol className="mt-4 grid gap-4 sm:grid-cols-3">
@@ -64,7 +64,7 @@ export default function Home() {
         <div className="mt-6 flex flex-wrap gap-3">
           <Link
             href="/record"
-            className="inline-flex min-h-11 items-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground [@media(hover:hover)]:hover:bg-primary/90"
+            className="inline-flex min-h-11 items-center gap-2 rounded-sm bg-primary px-4 text-sm font-medium text-primary-foreground [@media(hover:hover)]:hover:bg-primary/90"
           >
             <FileSignature size={16} aria-hidden /> Record on Arkiv
           </Link>
@@ -100,9 +100,9 @@ function DirectorySkeleton() {
     <div aria-busy>
       <Skeleton className="h-11 w-full rounded-md" />
       <div className="mt-4 flex gap-2">
-        <Skeleton className="h-11 w-44 rounded-full" />
-        <Skeleton className="h-11 w-52 rounded-full" />
-        <Skeleton className="h-11 w-40 rounded-full" />
+        <Skeleton className="h-11 w-44 rounded-sm" />
+        <Skeleton className="h-11 w-52 rounded-sm" />
+        <Skeleton className="h-11 w-40 rounded-sm" />
       </div>
     </div>
   );

@@ -13,7 +13,7 @@ export default function FeedPage() {
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6">
       <div className="flex flex-wrap items-center gap-3">
-        <h1 className="text-xl font-semibold">The live ledger</h1>
+        <h1 className="text-xl font-medium">The live ledger</h1>
         <LiveWatcher landlord={null} />
       </div>
       <p className="mt-2 text-sm text-muted-foreground">
@@ -84,7 +84,7 @@ async function FeedRows() {
                 <span className="ml-auto flex items-center gap-3 text-xs text-muted-foreground">
                   <span className="font-mono">{shortAddr(r.creator)}</span>
                   <a href={explorerEntityUrl(r.key)} target="_blank" rel="noopener noreferrer"
-                     className="inline-flex items-center gap-1 font-mono text-primary underline-offset-2 [@media(hover:hover)]:hover:underline">
+                     className="inline-flex items-center gap-1 font-mono text-foreground underline underline-offset-2 [@media(hover:hover)]:hover:underline">
                     {shortKey(r.key)} <ExternalLink size={11} aria-hidden />
                   </a>
                 </span>

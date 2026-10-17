@@ -6,7 +6,7 @@ const browser = await puppeteer.launch({
 const page = await browser.newPage();
 await page.setViewport({ width: 1280, height: 900 });
 await page.goto("http://localhost:3001/", { waitUntil: "domcontentloaded" });
-const ok = await page.waitForFunction(() => {
+await page.waitForFunction(() => {
   const chips = [...document.querySelectorAll("main button")].filter(
     (b) => b.type === "button" && b.className.includes("rounded-full"));
   if (!chips.length) return false;

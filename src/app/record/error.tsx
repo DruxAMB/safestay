@@ -21,7 +21,7 @@ export default function RecordError({
       <div className="flex items-start gap-3 rounded-lg border border-warn bg-warn-bg p-4">
         <TriangleAlert size={18} aria-hidden className="mt-0.5 shrink-0 text-warn" />
         <div>
-          <h1 className="font-semibold text-foreground">Can’t reach Arkiv right now</h1>
+          <h1 className="font-medium text-foreground">Can’t reach Arkiv right now</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             The Tiramisu testnet isn’t answering — it may be rate-limiting or briefly
             unreachable. Records you already saw are still on-chain; this is a

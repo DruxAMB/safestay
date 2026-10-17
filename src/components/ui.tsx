@@ -10,7 +10,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonHTMLAttributes<HTMLBut
     <button
       ref={ref}
       className={cn(
-        "inline-flex min-h-11 items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium",
+        "inline-flex min-h-11 items-center justify-center gap-2 rounded-sm px-4 py-2 text-sm font-medium",
         "transition-colors disabled:pointer-events-none disabled:opacity-50",
         variant === "primary" && "bg-primary text-primary-foreground [@media(hover:hover)]:hover:bg-primary/90",
         variant === "secondary" && "border border-border bg-card text-foreground [@media(hover:hover)]:hover:bg-muted",
@@ -43,7 +43,7 @@ export function Label({ className, ...props }: LabelHTMLAttributes<HTMLLabelElem
 }
 
 export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("rounded-lg border border-border bg-card text-card-foreground shadow-sm", className)} {...props} />;
+  return <div className={cn("rounded-lg border border-border bg-card text-card-foreground", className)} {...props} />;
 }
 
 export function Badge({ className, tone = "muted", ...props }: HTMLAttributes<HTMLSpanElement> & {
@@ -52,12 +52,12 @@ export function Badge({ className, tone = "muted", ...props }: HTMLAttributes<HT
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
+        "inline-flex items-center gap-1 rounded-sm px-2 py-0.5 text-xs font-medium",
         tone === "muted" && "bg-muted text-muted-foreground",
         tone === "success" && "bg-success-bg text-success",
         tone === "warn" && "bg-warn-bg text-warn",
         tone === "danger" && "bg-danger-bg text-danger",
-        tone === "primary" && "bg-primary/10 text-primary",
+        tone === "primary" && "bg-primary/40 text-foreground",
         className,
       )}
       {...props}

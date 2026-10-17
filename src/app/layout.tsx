@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, Geist_Mono } from "next/font/google";
 import { ShieldCheck } from "lucide-react";
 import { WalletProvider } from "@/components/WalletProvider";
 import { ConnectWallet } from "@/components/ConnectWallet";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
+  weight: ["400", "500"],
 });
 
 const geistMono = Geist_Mono({
@@ -33,13 +34,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${inter.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
         <WalletProvider>
         <header className="border-b border-border bg-card/80 backdrop-blur">
-          <nav className="mx-auto flex h-14 max-w-5xl items-center gap-5 px-4 sm:px-6" aria-label="Main">
-            <Link href="/" className="flex items-center gap-2 font-semibold">
+          <nav className="mx-auto flex h-14 max-w-5xl items-center gap-3 px-4 sm:gap-5 sm:px-6" aria-label="Main">
+            <Link href="/" className="flex items-center gap-2 font-medium">
               <ShieldCheck size={20} className="text-primary" aria-hidden />
               SafeStay
             </Link>
@@ -62,7 +63,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-4 gap-y-1 px-4 py-4 text-xs text-muted-foreground sm:px-6">
             <span>Built on Arkiv · Tiramisu testnet · Next.js</span>
             <a href="https://tiramisu.explorer.arkiv.network" target="_blank" rel="noopener noreferrer"
-               className="text-primary underline-offset-2 [@media(hover:hover)]:hover:underline">
+               className="text-foreground underline underline-offset-2 [@media(hover:hover)]:hover:underline">
               Tiramisu explorer
             </a>
             <span className="ml-auto">Synthetic demo data — no real tenants or landlords</span>
