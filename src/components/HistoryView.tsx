@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ShieldCheck, ShieldAlert, ExternalLink, FileCheck2 } from "lucide-react";
 import type { LandlordHistory } from "@/lib/arkiv/schema";
 import { OUTCOME_LABEL, explorerEntityUrl, explorerAddressUrl } from "@/lib/arkiv/config";
-import { inr, shortAddr, shortKey, expiryText } from "@/lib/format";
+import { inr, shortAddr, shortKey, expiryText, fmtDate } from "@/lib/format";
 import { Badge, Card, EmptyState } from "@/components/ui";
 import { LinkHint } from "@/components/LinkHint";
 import { WalletAvatar } from "@/components/WalletAvatar";
@@ -13,11 +13,20 @@ const EDGE = {
   returned_partial: "border-l-warn",
   withheld: "border-l-danger",
 } as const;
+const DOT = {
+  returned_full: "bg-success",
+  returned_partial: "bg-warn",
+  withheld: "bg-danger",
+} as const;
 
 export function HistoryView({ h }: { h: LandlordHistory }) {
   const pct = h.totals.count > 0 && BigInt(h.totals.promisedInr) > 0n
     ? Math.round((Number(BigInt(h.totals.returnedInr) * 10000n / BigInt(h.totals.promisedInr))) / 100)
     : 0;
+  // Terms that no outcome ever answered — signed obligations still silent.
+  const answered = new Set(h.outcomes.map((o) => o.termsKey?.toLowerCase()).filter(Boolean));
+  // Chronological pattern strip — oldest → newest, read left to right.
+  const timeline = [...h.outcomes].reverse();
 
   return (
     <div className="flex flex-col gap-6">
@@ -85,8 +94,22 @@ export function HistoryView({ h }: { h: LandlordHistory }) {
 
       {/* Outcome records */}
       <section aria-label="Deposit outcomes">
-        <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-muted-foreground">
+        <h2 className="mb-3 flex items-center gap-3 text-sm font-medium uppercase tracking-wide text-muted-foreground">
           Outcomes recorded by tenants
+          {h.outcomes.length > 0 && (
+            <span
+              aria-label={`${h.outcomes.length} outcomes, oldest to newest`}
+              className="inline-flex items-end gap-1"
+            >
+              {timeline.map((o) => (
+                <span
+                  key={o.entityKey}
+                  title={`${OUTCOME_LABEL[o.outcome]} · ${fmtDate(o.createdAtMs)}`}
+                  className={`inline-block h-2 w-2 rounded-full ${DOT[o.outcome]}`}
+                />
+              ))}
+            </span>
+          )}
         </h2>
         {h.outcomes.length === 0 ? (
           <EmptyState
@@ -103,6 +126,11 @@ export function HistoryView({ h }: { h: LandlordHistory }) {
                     <span className="text-sm font-medium tabular-nums">
                       {inr(o.amountReturnedInr)} of {inr(o.depositInr)}
                     </span>
+                    {BigInt(o.depositInr) - BigInt(o.amountReturnedInr) > 0n && (
+                      <span className="text-sm font-medium tabular-nums text-danger">
+                        kept {inr(BigInt(o.depositInr) - BigInt(o.amountReturnedInr))}
+                      </span>
+                    )}
                     <span className="text-xs text-muted-foreground">· {o.city}</span>
                     <span className="ml-auto flex items-center gap-2">
                       {o.verified ? (
@@ -122,6 +150,7 @@ export function HistoryView({ h }: { h: LandlordHistory }) {
                       <WalletAvatar address={o.creator} size={14} />
                       <span className="font-mono">{shortAddr(o.creator)}</span>
                     </span>
+                    <span>recorded {fmtDate(o.createdAtMs)}</span>
                     <span>{expiryText(o.expiresAtBlock, h.snapshotBlock)}</span>
                     <a href={explorerEntityUrl(o.entityKey)} target="_blank" rel="noopener noreferrer"
                        className="inline-flex items-center gap-1 font-mono text-foreground underline underline-offset-2 [@media(hover:hover)]:hover:underline">
@@ -158,7 +187,17 @@ export function HistoryView({ h }: { h: LandlordHistory }) {
                 <Card className="p-4">
                   <div className="flex items-center justify-between gap-2">
                     <p className="font-medium">{t.displayLabel || t.propertyLabel}</p>
-                    <span className="font-medium tabular-nums">{inr(t.depositInr)}</span>
+                    <span className="inline-flex items-center gap-2">
+                      {!answered.has(t.entityKey.toLowerCase()) && (
+                        <span
+                          title="No tenant outcome recorded against these terms"
+                          className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground"
+                        >
+                          awaiting outcome
+                        </span>
+                      )}
+                      <span className="font-medium tabular-nums">{inr(t.depositInr)}</span>
+                    </span>
                   </div>
                   <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
                     <span>tenant <span className="font-mono">{shortAddr(t.tenant)}</span></span>

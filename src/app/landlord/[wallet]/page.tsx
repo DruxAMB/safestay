@@ -6,6 +6,7 @@ import { getLandlordHistory, getProfile } from "@/lib/arkiv/queries";
 import { HistoryView } from "@/components/HistoryView";
 import { LiveWatcher } from "@/components/LiveWatcher";
 import { WalletAvatar } from "@/components/WalletAvatar";
+import { CopyShareButton } from "@/components/CopyShareButton";
 import { Skeleton } from "@/components/ui";
 
 export default async function LandlordPage({
@@ -23,6 +24,7 @@ export default async function LandlordPage({
           <LandlordTitle wallet={wallet} />
         </Suspense>
         <LiveWatcher landlord={wallet} />
+        <span className="ml-auto"><CopyShareButton /></span>
       </div>
       <Suspense fallback={<HistorySkeleton />}>
         <History wallet={wallet} />

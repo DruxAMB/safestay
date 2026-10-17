@@ -13,6 +13,13 @@ export function shortKey(k: string): string {
   return k.length > 14 ? `${k.slice(0, 8)}…${k.slice(-6)}` : k;
 }
 
+/** "2026-10-17" — ISO date from a millisecond timestamp string. */
+export function fmtDate(ms: string): string {
+  const n = Number(ms);
+  if (!Number.isFinite(n) || n <= 0) return "—";
+  return new Date(n).toISOString().slice(0, 10);
+}
+
 /** Remaining life from an expiry block against a snapshot block. */
 export function blocksLeft(expiresAtBlock: string, snapshotBlock: string): bigint {
   const left = BigInt(expiresAtBlock) - BigInt(snapshotBlock);
