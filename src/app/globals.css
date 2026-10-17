@@ -67,6 +67,16 @@ body {
   font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 }
 
+/* Ramp's stippled paper — halftone dot field, decorative only. */
+.bg-stipple {
+  background-image: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--foreground) 14%, transparent) 1.3px,
+    transparent 1.3px
+  );
+  background-size: 14px 14px;
+}
+
 /* Focus ring — visible on every interactive element, token-driven. */
 :where(a, button, input, select, textarea, [tabindex]):focus-visible {
   outline: 2px solid var(--ring);

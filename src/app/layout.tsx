@@ -39,7 +39,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="flex min-h-full flex-col">
         <WalletProvider>
         <header className="border-b border-border-inverse bg-surface-inverse text-text-inverse">
-          <nav className="mx-auto flex h-14 max-w-5xl items-center gap-3 px-4 sm:gap-5 sm:px-6" aria-label="Main">
+          <nav className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4 sm:gap-5 sm:px-6" aria-label="Main">
             <Link href="/" className="flex items-center gap-2 font-medium">
               <ShieldCheck size={20} className="text-primary" aria-hidden />
               SafeStay
@@ -60,7 +60,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         </header>
         <main className="flex-1">{children}</main>
         <footer className="border-t border-border-inverse bg-surface-inverse">
-          <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-4 gap-y-1 px-4 py-4 text-xs text-text-inverse-muted sm:px-6">
+          <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-1 px-4 py-4 text-xs text-text-inverse-muted sm:px-6">
             <span>Built on Arkiv · Tiramisu testnet · Next.js</span>
             <a href="https://tiramisu.explorer.arkiv.network" target="_blank" rel="noopener noreferrer"
                className="text-text-inverse underline underline-offset-2">

@@ -11,7 +11,8 @@ export default function Home() {
   return (
     <div>
       {/* Hero — one scroll, straight into the tool. The lookup is the app. */}
-      <section className="mx-auto w-full max-w-5xl px-4 py-14 sm:px-6 sm:py-24">
+      <section className="bg-stipple">
+        <div className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-6 sm:py-24">
         <AnimatedContent trigger="mount" distance={24} duration={0.7} stagger={0.08} className="flex flex-col gap-5">
           <p className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
             For renters in India · powered by Arkiv
@@ -29,11 +30,12 @@ export default function Home() {
             </Suspense>
           </div>
         </AnimatedContent>
+        </div>
       </section>
 
       {/* Obsidian band — how it works, ruled columns. */}
       <section className="bg-surface-inverse text-text-inverse" aria-label="How it works">
-        <AnimatedContent distance={24} duration={0.7} threshold={0.15} className="mx-auto w-full max-w-5xl px-4 py-14 sm:px-6 sm:py-20">
+        <AnimatedContent distance={24} duration={0.7} threshold={0.15} className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-6 sm:py-20">
           <h2 className="text-sm font-medium uppercase tracking-wide text-text-inverse-muted">
             How it works
           </h2>
