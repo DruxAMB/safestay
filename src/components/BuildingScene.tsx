@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
+import { useHeroSelection } from "./HeroSelection";
 
 const WALL = 0xf5f0e6; // warm paper-cream facade
 const SLAB = 0x9a9184; // protruding floor ledges — distinctly darker than walls
@@ -34,6 +35,28 @@ function box(
 const FLOOR = 1.0; // floor-to-floor height
 const SLAB_T = 0.14; // ledge thickness
 const SLAB_P = 0.13; // ledge protrusion
+const GLOW_FLOOR = 3; // resting floor when nothing is selected
+
+const floorYAt = (f: number) => f * FLOOR + FLOOR / 2 - 0.06;
+const hashAddr = (a: string) => [...a].reduce((s, c) => s + c.charCodeAt(0), 0);
+/** Deterministic landlord → floor map; upper floors stay visible above the
+ *  stats strip and out from behind the dossier card. */
+const floorFor = (addr: string | null) => (addr == null ? GLOW_FLOOR : 2 + (hashAddr(addr) % 3));
+
+type World = {
+  glow: THREE.Group;
+  lock: THREE.Group;
+  tetherGeo: THREE.BufferGeometry;
+  tetherMat: THREE.LineBasicMaterial;
+  spill: THREE.PointLight;
+  renderer: THREE.WebGLRenderer;
+  scene: THREE.Scene;
+  camera: THREE.OrthographicCamera;
+  reduce: boolean;
+  targetGlowY: number;
+  dragOff: number;
+  verifyAt: number;
+};
 
 /** Tall narrow window: dark inset panel + center mullion → two panes. */
 function windowUnit(w = 0.26, h = 0.62) {
@@ -200,6 +223,24 @@ function blobShadow() {
  */
 export function BuildingScene({ className = "" }: { className?: string }) {
   const mountRef = useRef<HTMLDivElement>(null);
+  const { selected } = useHeroSelection();
+  const world = useRef<World | null>(null);
+
+  // Directory selection rides the glowing floor to that landlord's unit.
+  useEffect(() => {
+    const w = world.current;
+    if (!w) return;
+    w.targetGlowY = floorYAt(floorFor(selected));
+    if (w.reduce) {
+      w.glow.position.y = w.targetGlowY;
+      w.lock.position.y = w.targetGlowY + 0.3;
+      const pts = w.tetherGeo.attributes.position as THREE.BufferAttribute;
+      pts.setY(0, w.targetGlowY + 0.15);
+      pts.setY(1, w.lock.position.y);
+      pts.needsUpdate = true;
+      w.renderer.render(w.scene, w.camera);
+    }
+  }, [selected]);
 
   useEffect(() => {
     const mount = mountRef.current;
@@ -246,13 +287,10 @@ export function BuildingScene({ className = "" }: { className?: string }) {
 
     // Wing B — right, RECESSED 0.9 behind wing A's front plane; one floor taller
     const bW = 3.3, bD = 2.4, bX = 1.55, bZ = -0.85;
-    const GLOW_FLOOR = 3; // above the dossier card's overlap
-    const glowCols = [-0.9, 0.15, 1.05]; // the whole recessed front glows this floor
     const wingB = wing({
       w: bW, d: bD, floors: FLOORS,
       frontCols: [-0.9, 0.15, 1.05],
       rightCols: [0.6, -0.4],
-      skip: (face, col, f) => face === "front" && f === GLOW_FLOOR && glowCols.includes(col),
       balconies: [
         { face: "right", col: 0.6, floor: 4 },
         { face: "right", col: -0.4, floor: 3 },
@@ -265,7 +303,7 @@ export function BuildingScene({ className = "" }: { className?: string }) {
     const glow = new THREE.Group();
     const glowW = 3.0, glowH = 0.92;
     const glowX = bX + 0.08; // centered on the recessed face
-    const glowY = GLOW_FLOOR * FLOOR + FLOOR / 2 - 0.06;
+    const glowY = floorYAt(GLOW_FLOOR);
     const frontB = bZ + bD / 2; // recessed front plane of wing B
     // emissive facade panel
     glow.add(box(glowW, glowH, 0.1, 0xf8ffcf, 0, 0, 0.03, { emissive: ACCENT, ei: 1.15, rough: 0.4 }));
@@ -295,7 +333,8 @@ export function BuildingScene({ className = "" }: { className?: string }) {
       new THREE.Vector3(glowX + glowW / 2 + 0.05, glowY + 0.15, frontB + 0.06),
       lockAnchor.clone(),
     ]);
-    const tether = new THREE.Line(lineGeo, new THREE.LineBasicMaterial({ color: INK, transparent: true, opacity: 0.45 }));
+    const tetherMat = new THREE.LineBasicMaterial({ color: INK, transparent: true, opacity: 0.45 });
+    const tether = new THREE.Line(lineGeo, tetherMat);
     building.add(tether);
 
     // ---- Base plate --------------------------------------------------------
@@ -308,6 +347,50 @@ export function BuildingScene({ className = "" }: { className?: string }) {
     building.position.y = 0.2;
     scene.add(building);
     scene.add(blobShadow());
+
+    const w = {
+      glow, lock, tetherGeo: lineGeo, tetherMat, spill,
+      renderer, scene, camera, reduce,
+      targetGlowY: glowY, dragOff: 0, verifyAt: -10,
+    };
+    world.current = w;
+
+    // Drag-to-rotate (empty hero space drags the tower) + padlock click-verify
+    const canvas = renderer.domElement;
+    canvas.style.pointerEvents = "auto"; // parent is pointer-events-none
+    canvas.style.touchAction = "pan-y";
+    canvas.style.cursor = "grab";
+    let dragging = false, lastX = 0, downX = 0, downY = 0;
+    const onDown = (e: PointerEvent) => {
+      dragging = true;
+      downX = lastX = e.clientX;
+      downY = e.clientY;
+      canvas.setPointerCapture(e.pointerId);
+      canvas.style.cursor = "grabbing";
+    };
+    const onDrag = (e: PointerEvent) => {
+      if (!dragging) return;
+      w.dragOff = Math.max(-0.55, Math.min(0.55, w.dragOff + (e.clientX - lastX) * 0.004));
+      lastX = e.clientX;
+    };
+    const onUp = (e: PointerEvent) => {
+      if (!dragging) return;
+      dragging = false;
+      canvas.style.cursor = "grab";
+      if (Math.abs(e.clientX - downX) < 6 && Math.abs(e.clientY - downY) < 6) {
+        const r = canvas.getBoundingClientRect();
+        const ndc = new THREE.Vector2(
+          ((e.clientX - r.left) / r.width) * 2 - 1,
+          -((e.clientY - r.top) / r.height) * 2 + 1,
+        );
+        const rc = new THREE.Raycaster();
+        rc.setFromCamera(ndc, camera);
+        if (rc.intersectObject(lock, true).length) w.verifyAt = clock.getElapsedTime();
+      }
+    };
+    canvas.addEventListener("pointerdown", onDown);
+    canvas.addEventListener("pointermove", onDrag);
+    window.addEventListener("pointerup", onUp);
 
     const size = () => {
       const w = mount.clientWidth, h = mount.clientHeight;
@@ -333,14 +416,24 @@ export function BuildingScene({ className = "" }: { className?: string }) {
     const clock = new THREE.Clock();
     const frame = () => {
       const t = clock.getElapsedTime();
-      building.rotation.y = Math.sin(t * 0.18) * 0.045 + px * 0.08;
+      // The glow rides to the selected landlord's floor.
+      glow.position.y += (w.targetGlowY - glow.position.y) * 0.12;
+      const gy = glow.position.y;
+      building.rotation.y = Math.sin(t * 0.18) * 0.045 + px * 0.08 + w.dragOff;
       building.rotation.x = py * 0.025;
-      lock.position.y = lockAnchor.y + Math.sin(t * 1.05) * 0.11;
+      // Padlock verify pulse
+      const pulse = Math.max(0, 1 - (t - w.verifyAt) / 0.7);
+      const s = pulse > 0 ? Math.sin(Math.PI * pulse) : 0;
+      lock.scale.setScalar(1.3 * (1 + 0.35 * s));
+      spill.intensity = 14 + 34 * s;
+      tetherMat.opacity = 0.45 + 0.55 * s;
+      lock.position.set(lockAnchor.x, gy + 0.3 + Math.sin(t * 1.05) * 0.11, lockAnchor.z);
       lock.rotation.y = Math.sin(t * 0.7) * 0.4;
-      // tether tracks the bobbing lock
-      const p = lineGeo.attributes.position as THREE.BufferAttribute;
-      p.setXYZ(1, lock.position.x, lock.position.y, lock.position.z);
-      p.needsUpdate = true;
+      // tether tracks glow floor + bobbing lock
+      const pts = lineGeo.attributes.position as THREE.BufferAttribute;
+      pts.setXYZ(0, glowX + glowW / 2 + 0.05, gy + 0.15, frontB + 0.06);
+      pts.setXYZ(1, lock.position.x, lock.position.y, lock.position.z);
+      pts.needsUpdate = true;
       renderer.render(scene, camera);
       raf = requestAnimationFrame(frame);
     };
@@ -353,6 +446,9 @@ export function BuildingScene({ className = "" }: { className?: string }) {
     return () => {
       cancelAnimationFrame(raf);
       window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      canvas.removeEventListener("pointerdown", onDown);
+      canvas.removeEventListener("pointermove", onDrag);
       ro.disconnect();
       scene.traverse((o) => {
         if (o instanceof THREE.Mesh) {

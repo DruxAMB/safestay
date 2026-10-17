@@ -2,9 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useId } from "react";
-import { Search } from "lucide-react";
+import { ArrowRight, Search } from "lucide-react";
 import { Button, Input, Label } from "@/components/ui";
 import { shortAddr } from "@/lib/format";
+import { useHeroSelection } from "./HeroSelection";
 
 const ADDR_RE = /^0x[0-9a-fA-F]{40}$/;
 
@@ -30,14 +31,29 @@ export function LookupForm({ directory, directoryNote }: {
   const id = useId();
   const [value, setValue] = useState("");
   const [error, setError] = useState<string | null>(null);
+  // A picked chip: selection already drove the specimen + building glow;
+  // the submit button's second stage navigates to the full ledger.
+  const [picked, setPicked] = useState<string | null>(null);
+  const { select } = useHeroSelection();
 
   function go(addr: string) {
     router.push(`/landlord/${addr.trim()}`);
   }
 
+  function pick(l: DirectoryEntry) {
+    setValue(l.address);
+    setError(null);
+    setPicked(l.address);
+    select(l.address);
+  }
+
   function submit(e: React.FormEvent) {
     e.preventDefault();
     const v = value.trim();
+    if (picked && v === picked) {
+      go(v);
+      return;
+    }
     if (ADDR_RE.test(v)) {
       setError(null);
       go(v);
@@ -68,7 +84,11 @@ export function LookupForm({ directory, directoryNote }: {
           <Input
             id={id}
             value={value}
-            onChange={(e) => { setValue(e.target.value); if (error) setError(null); }}
+            onChange={(e) => {
+              setValue(e.target.value);
+              if (error) setError(null);
+              if (picked) { setPicked(null); select(null); }
+            }}
             placeholder="0x… or a name like “Sunrise PG”"
             inputMode="text"
             autoComplete="off"
@@ -79,7 +99,11 @@ export function LookupForm({ directory, directoryNote }: {
           />
         </div>
         <Button type="submit" disabled={!value.trim()}>
-          <Search size={16} aria-hidden /> Check history
+          {picked ? (
+            <>View full history <ArrowRight size={16} aria-hidden /></>
+          ) : (
+            <><Search size={16} aria-hidden /> Check history</>
+          )}
         </Button>
       </form>
       {error && (
@@ -94,8 +118,13 @@ export function LookupForm({ directory, directoryNote }: {
           <button
             key={l.address}
             type="button"
-            onClick={() => { setValue(l.address); setError(null); }}
-            className="inline-flex min-h-11 items-center gap-2 rounded-sm border border-border bg-card px-4 text-sm [@media(hover:hover)]:hover:border-foreground [@media(hover:hover)]:hover:bg-muted"
+            onClick={() => pick(l)}
+            aria-pressed={picked === l.address}
+            className={`inline-flex min-h-11 items-center gap-2 rounded-sm border px-4 text-sm [@media(hover:hover)]:hover:border-foreground ${
+              picked === l.address
+                ? "border-foreground bg-primary/20"
+                : "border-border bg-card [@media(hover:hover)]:hover:bg-muted"
+            }`}
           >
             <span className="font-medium">{l.name ?? shortAddr(l.address)}</span>
             <span className="font-mono text-xs text-muted-foreground">

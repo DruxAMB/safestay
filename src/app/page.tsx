@@ -2,7 +2,8 @@ import { Suspense, cache } from "react";
 import Link from "next/link";
 import { io } from "next/cache";
 import { LookupForm } from "@/components/LookupForm";
-import { EntityDossier } from "@/components/EntityDossier";
+import { InteractiveDossier } from "@/components/InteractiveDossier";
+import { HeroSelection } from "@/components/HeroSelection";
 import { BuildingScene } from "@/components/BuildingScene";
 import { getHeroData, type HeroData } from "@/lib/arkiv/queries";
 import { Skeleton } from "@/components/ui";
@@ -15,6 +16,7 @@ export default function Home() {
       {/* Hero — evidence dossier: the console is the tool, the specimen is
           a real on-chain entity, every number is live. */}
       <section className="bg-stipple relative overflow-hidden">
+        <HeroSelection>
         {/* Full-bleed WebGL canvas — mounted on the section, not the right
             column, so the building silhouette can't clip at column edges.
             pointer-events-none inside; content z-10 stays interactive. */}
@@ -49,9 +51,9 @@ export default function Home() {
               <img
                 src="/hero-building.png"
                 alt="Clay-render apartment tower — the glowing unit is a signed deposit record"
-                className="mx-auto w-full max-w-md lg:hidden"
+                className="mx-auto lg:hidden"
               />
-              <div className="mt-6 lg:absolute lg:bottom-0 lg:left-0 lg:mt-0 lg:w-78.75">
+              <div className="mt-6 lg:absolute lg:top-0 lg:left-0 lg:mt-0 lg:w-78.75">
                 <Suspense fallback={<DossierSkeleton />}>
                   <DossierSlot />
                 </Suspense>
@@ -62,6 +64,7 @@ export default function Home() {
             <StatsStrip />
           </Suspense>
         </div>
+        </HeroSelection>
       </section>
 
       {/* Obsidian band — how it works, ruled columns. */}
@@ -177,21 +180,13 @@ async function LookupConsole() {
 
 async function DossierSlot() {
   const { data } = await tryHeroData();
-  if (!data?.featured) {
-    return (
-      <div className="relative border border-foreground/40 bg-card p-4">
-        <CornerMarks />
-        <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-          Specimen — unavailable
-        </p>
-        <p className="mt-2 text-sm text-muted-foreground">
-          No entity fetched — the chain read didn’t complete. The console left of
-          here still works by wallet address.
-        </p>
-      </div>
-    );
-  }
-  return <EntityDossier entity={data.featured} snapshot={data.snapshot} />;
+  return (
+    <InteractiveDossier
+      featured={data?.featured ?? null}
+      terms={data?.terms ?? []}
+      snapshot={data?.snapshot ?? "0"}
+    />
+  );
 }
 
 async function StatsStrip() {
