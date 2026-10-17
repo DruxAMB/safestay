@@ -26,6 +26,10 @@
   --radius: 6px;                /* tags + buttons */
   --radius-md: 10px;            /* inputs */
   --radius-lg: 16px;            /* cards */
+  --surface-inverse: #1a1919;   /* Obsidian — dark editorial band */
+  --border-inverse: #3a3835;    /* hairline on obsidian */
+  --text-inverse: #f4f2f0;
+  --text-inverse-muted: #a8a5a0;
 }
 
 @theme inline {
@@ -46,6 +50,10 @@
   --color-warn-bg: var(--warn-bg);
   --color-danger: var(--danger);
   --color-danger-bg: var(--danger-bg);
+  --color-surface-inverse: var(--surface-inverse);
+  --color-border-inverse: var(--border-inverse);
+  --color-text-inverse: var(--text-inverse);
+  --color-text-inverse-muted: var(--text-inverse-muted);
   --radius-lg: var(--radius-lg);
   --radius-md: var(--radius-md);
   --radius-sm: var(--radius);

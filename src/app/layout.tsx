@@ -59,11 +59,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           </nav>
         </header>
         <main className="flex-1">{children}</main>
-        <footer className="border-t border-border">
-          <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-4 gap-y-1 px-4 py-4 text-xs text-muted-foreground sm:px-6">
+        <footer className="border-t border-border-inverse bg-surface-inverse">
+          <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-4 gap-y-1 px-4 py-4 text-xs text-text-inverse-muted sm:px-6">
             <span>Built on Arkiv · Tiramisu testnet · Next.js</span>
             <a href="https://tiramisu.explorer.arkiv.network" target="_blank" rel="noopener noreferrer"
-               className="text-foreground underline underline-offset-2 [@media(hover:hover)]:hover:underline">
+               className="text-text-inverse underline underline-offset-2">
               Tiramisu explorer
             </a>
             <span className="ml-auto">Synthetic demo data — no real tenants or landlords</span>

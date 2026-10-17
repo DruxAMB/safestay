@@ -8,13 +8,13 @@ import { ShieldCheck, FileSignature, Eye, Timer } from "lucide-react";
 
 export default function Home() {
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 sm:px-6">
+    <div>
       {/* Hero — one scroll, straight into the tool. The lookup is the app. */}
-      <section className="flex flex-col gap-5 py-14 sm:py-20">
+      <section className="mx-auto flex w-full max-w-5xl flex-col gap-5 px-4 py-14 sm:px-6 sm:py-24">
         <p className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
           For renters in India · powered by Arkiv
         </p>
-        <h1 className="max-w-2xl text-4xl font-medium leading-tight tracking-tight sm:text-5xl">
+        <h1 className="max-w-3xl text-5xl leading-[1.02] tracking-tight sm:text-6xl md:text-7xl">
           Check a landlord’s deposit history before you pay.
         </h1>
         <p className="max-w-xl text-lg text-muted-foreground">
@@ -28,52 +28,54 @@ export default function Home() {
         </div>
       </section>
 
-      {/* How it works — 3 steps */}
-      <section className="border-t border-border py-10" aria-label="How it works">
-        <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
-          How it works
-        </h2>
-        <ol className="mt-4 grid gap-4 sm:grid-cols-3">
-          {[
-            {
-              icon: FileSignature,
-              title: "Landlord signs the terms",
-              body: "Deposit amount and tenant wallet are written as a read-only Arkiv entity — signed by the landlord's own wallet.",
-            },
-            {
-              icon: Eye,
-              title: "Tenant records the outcome",
-              body: "When the tenancy ends, the tenant records what was actually returned — linked back to the terms that named them.",
-            },
-            {
-              icon: Timer,
-              title: "History outlives the app",
-              body: "Records live on Tiramisu for ~2 years, queryable by anyone. If this site vanished tomorrow, the record would not.",
-            },
-          ].map((s, i) => (
-            <li key={s.title} className="rounded-lg border border-border bg-card p-4">
-              <div className="flex items-center gap-2 text-primary">
-                <s.icon size={18} aria-hidden />
-                <span className="text-xs font-medium text-muted-foreground">Step {i + 1}</span>
-              </div>
-              <h3 className="mt-2 font-medium">{s.title}</h3>
-              <p className="mt-1 text-sm text-muted-foreground">{s.body}</p>
-            </li>
-          ))}
-        </ol>
-        <div className="mt-6 flex flex-wrap gap-3">
-          <Link
-            href="/record"
-            className="inline-flex min-h-11 items-center gap-2 rounded-sm bg-primary px-4 text-sm font-medium text-primary-foreground [@media(hover:hover)]:hover:bg-primary/90"
-          >
-            <FileSignature size={16} aria-hidden /> Record on Arkiv
-          </Link>
-          <Link
-            href="/feed"
-            className="inline-flex min-h-11 items-center gap-2 rounded-md border border-border bg-card px-4 text-sm font-medium [@media(hover:hover)]:hover:bg-muted"
-          >
-            <ShieldCheck size={16} aria-hidden className="text-primary" /> Watch the live ledger
-          </Link>
+      {/* Obsidian band — how it works, ruled columns. */}
+      <section className="bg-surface-inverse text-text-inverse" aria-label="How it works">
+        <div className="mx-auto w-full max-w-5xl px-4 py-14 sm:px-6 sm:py-20">
+          <h2 className="text-sm font-medium uppercase tracking-wide text-text-inverse-muted">
+            How it works
+          </h2>
+          <ol className="mt-6 grid gap-8 sm:grid-cols-3 sm:gap-0 sm:divide-x sm:divide-border-inverse">
+            {[
+              {
+                icon: FileSignature,
+                title: "Landlord signs the terms",
+                body: "Deposit amount and tenant wallet are written as a read-only Arkiv entity — signed by the landlord's own wallet.",
+              },
+              {
+                icon: Eye,
+                title: "Tenant records the outcome",
+                body: "When the tenancy ends, the tenant records what was actually returned — linked back to the terms that named them.",
+              },
+              {
+                icon: Timer,
+                title: "History outlives the app",
+                body: "Records live on Tiramisu for ~2 years, queryable by anyone. If this site vanished tomorrow, the record would not.",
+              },
+            ].map((s, i) => (
+              <li key={s.title} className="sm:px-7 sm:first:pl-0 sm:last:pr-0">
+                <div className="flex items-center gap-2 text-primary">
+                  <s.icon size={18} aria-hidden />
+                  <span className="text-xs font-medium text-text-inverse-muted">Step {i + 1}</span>
+                </div>
+                <h3 className="mt-2 text-lg font-medium">{s.title}</h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-text-inverse-muted">{s.body}</p>
+              </li>
+            ))}
+          </ol>
+          <div className="mt-9 flex flex-wrap gap-3">
+            <Link
+              href="/record"
+              className="inline-flex min-h-11 items-center gap-2 rounded-sm bg-primary px-4 text-sm font-medium text-primary-foreground [@media(hover:hover)]:hover:bg-primary/90"
+            >
+              <FileSignature size={16} aria-hidden /> Record on Arkiv
+            </Link>
+            <Link
+              href="/feed"
+              className="inline-flex min-h-11 items-center gap-2 rounded-sm border border-border-inverse px-4 text-sm font-medium text-text-inverse [@media(hover:hover)]:hover:bg-white/5"
+            >
+              <ShieldCheck size={16} aria-hidden className="text-primary" /> Watch the live ledger
+            </Link>
+          </div>
         </div>
       </section>
     </div>
@@ -92,7 +94,20 @@ async function DirectoryLookup() {
     listDirectory().catch(() => null),
     new Promise<null>((res) => setTimeout(() => res(null), DIRECTORY_BOUND_MS)),
   ]);
-  return <LookupForm directory={directory} />;
+  const termsCount = directory?.reduce((sum, l) => sum + l.termsCount, 0) ?? 0;
+  return (
+    <div>
+      {termsCount > 0 && (
+        <p className="mb-3 flex items-center gap-2 text-sm text-muted-foreground">
+          <span className="rounded-sm bg-primary px-1.5 py-0.5 font-mono text-xs font-medium tabular-nums text-primary-foreground">
+            {termsCount}
+          </span>
+          deposit terms signed on Arkiv — every one queryable, even if we vanished
+        </p>
+      )}
+      <LookupForm directory={directory} />
+    </div>
+  );
 }
 
 function DirectorySkeleton() {
