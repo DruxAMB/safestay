@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { inr, shortAddr, expiryText } from "@/lib/format";
+import { LinkHint } from "@/components/LinkHint";
 import type { TermsDto } from "@/lib/arkiv/schema";
 
 /** Registration "+" marks at a frame's corners — blueprint/drafting language. */
@@ -102,9 +104,13 @@ export function EntityDossier({ entity, snapshot }: { entity: TermsDto; snapshot
         </div>
         {/* Footer strip */}
         <div className="flex items-center justify-between border-t border-foreground/40 px-4 py-2">
-          <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+          <Link
+            href={`/landlord/${entity.creator}`}
+            className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground underline-offset-2 transition-colors [@media(hover:hover)]:hover:text-foreground [@media(hover:hover)]:hover:underline"
+          >
             Signed by {shortAddr(entity.creator)}
-          </p>
+            <LinkHint />
+          </Link>
           <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
             blk {snapshot}
           </p>
