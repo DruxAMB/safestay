@@ -8,33 +8,57 @@ import { BuildingLoader } from "./BuildingLoader";
  *  holds the previous screen while a route streams (loading.tsx only covers
  *  hard loads), so the overlay is armed directly: capture-phase clicks on
  *  internal <a href="/…"> links, plus a "safestay:nav" event for router.push.
- *  A 120ms arm delay keeps instant/prefetched navs flash-free; a 15s safety
- *  clears it if a navigation never commits. Sits under the wallet modal
- *  (z-50) and toasts (z-60). */
+ *
+ *  Every navigation shows it for a MINIMUM dwell — one full restructure loop
+ *  (3.4s) — even if the route commits instantly, so the animation always
+ *  reads as a complete build cycle rather than a flash. A 15s safety clears
+ *  it if a navigation never commits. Sits under the wallet modal (z-50) and
+ *  toasts (z-60). */
+const REVEAL_MS = 120;
+const MIN_DWELL_MS = 3400;
+const SAFETY_MS = 15_000;
+
 export function NavLoader() {
   const pathname = usePathname();
   const [visible, setVisible] = useState(false);
   const [armedPath, setArmedPath] = useState<string | null>(null);
+  const [committed, setCommitted] = useState(false);
   const timers = useRef<number[]>([]);
+  const armedAt = useRef(0);
 
-  // Navigation committed → hide (render-time adjust, not an effect).
-  if (visible && armedPath !== null && pathname !== armedPath) {
-    setVisible(false);
-    setArmedPath(null);
+  // Navigation committed → record it; the hide timer (below) enforces dwell.
+  if (!committed && armedPath !== null && pathname !== armedPath) {
+    setCommitted(true);
   }
 
+  // Once committed, hold the overlay until the minimum dwell has elapsed.
   useEffect(() => {
+    if (!committed) return;
+    const wait = Math.max(0, armedAt.current + REVEAL_MS + MIN_DWELL_MS - Date.now());
+    const t = window.setTimeout(() => {
+      setVisible(false);
+      setCommitted(false);
+      setArmedPath(null);
+    }, wait);
+    timers.current.push(t);
+    return () => window.clearTimeout(t);
+  }, [committed]);
+
+  useEffect(() => {
+    const hide = () => {
+      setVisible(false);
+      setCommitted(false);
+      setArmedPath(null);
+    };
     const arm = () => {
       timers.current.forEach(clearTimeout);
-      const from = location.pathname;
-      setArmedPath(from);
+      timers.current = [];
+      armedAt.current = Date.now();
+      setArmedPath(location.pathname);
+      setCommitted(false);
       timers.current = [
-        // Only reveal if the nav hasn't already committed in the meantime.
-        window.setTimeout(() => {
-          if (location.pathname === from) setVisible(true);
-        }, 120),
-        // Safety: never trap the screen if a navigation silently dies.
-        window.setTimeout(() => setVisible(false), 15_000),
+        window.setTimeout(() => setVisible(true), REVEAL_MS),
+        window.setTimeout(hide, SAFETY_MS),
       ];
     };
     const onClick = (e: MouseEvent) => {
