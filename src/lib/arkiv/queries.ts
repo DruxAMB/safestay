@@ -348,24 +348,14 @@ export async function getHeroData(): Promise<HeroData> {
         !best || BigInt(t.createdAtMs) > BigInt(best.createdAtMs) ? t : best,
       null,
     ) ?? null;
-  const termBlocks = terms.map((t) => ({
-    key: t.entityKey,
-    label: t.city || "deposit_terms",
-    featured: featured?.entityKey === t.entityKey,
-    kind: "deposit_terms" as const,
-    at: BigInt(t.createdAtMs),
-  }));
-  const outcomeBlocks = outcomes.map((o) => ({
-    key: o.entityKey,
-    label: o.city || "deposit_outcome",
-    featured: false,
-    kind: "deposit_outcome" as const,
-    at: BigInt(o.createdAtMs),
-  }));
-  const blocks = [...termBlocks, ...outcomeBlocks]
-    .sort((a, b) => Number(b.at - a.at))
-    .slice(0, 14)
-    .map(({ key, label, featured }) => ({ key, label, featured }));
+  const blocks = [...terms]
+    .sort((a, b) => Number(BigInt(b.createdAtMs) - BigInt(a.createdAtMs)))
+    .slice(0, 8)
+    .map((t) => ({
+      key: t.entityKey,
+      label: t.city || "deposit_terms",
+      featured: featured?.entityKey === t.entityKey,
+    }));
   return {
     directory: buildDirectory(termsRes.entities, profilesRes.entities),
     termsCount: terms.length,

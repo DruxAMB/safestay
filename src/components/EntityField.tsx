@@ -89,17 +89,16 @@ export function EntityField({ blocks, className = "" }: { blocks: FieldBlock[]; 
       const mat = new THREE.MeshStandardMaterial({
         map: tex,
         color: b.featured ? 0xffffff : 0xf7f5f3,
-        roughness: 0.4,
+        roughness: 0.55,
         transparent: true,
-        opacity: b.featured ? 0.85 : 0.62,
-        depthWrite: false,
+        opacity: b.featured ? 0.98 : 0.9,
         emissive: b.featured ? new THREE.Color(ACCENT) : new THREE.Color(INK),
         emissiveIntensity: b.featured ? 0.3 : 0.03,
       });
       const edgeMat = new THREE.LineBasicMaterial({
-        color: b.featured ? 0x7a8a00 : 0x9a9694,
+        color: b.featured ? 0x7a8a00 : 0x8a8784,
         transparent: true,
-        opacity: b.featured ? 0.9 : 0.4,
+        opacity: b.featured ? 0.9 : 0.55,
       });
       disposables.push(tex, mat, edgeMat);
       const m = new THREE.Mesh(geo, mat);
