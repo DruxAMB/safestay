@@ -697,7 +697,7 @@ export function BuildingScene({ className = "" }: { className?: string }) {
     // plinth and water pool stay inside the frame.
     const terrace = buildTerrace();
     terrace.group.visible = false;
-    terrace.group.scale.setScalar(0.86);
+    terrace.group.scale.setScalar(1.29);
     terrace.group.position.set(0.3, 0.5, 0.1);
     building.add(lblock, tower.group, terrace.group);
 
@@ -849,7 +849,7 @@ export function BuildingScene({ className = "" }: { className?: string }) {
     // incoming one rises out of the ground (scaleY collapse / rise). Called
     // from the React selection effect via the world object. Re-clicks during
     // a transition retarget cleanly: the model on screen becomes `from`.
-    const baseOf = (m: Model) => (m === "tw" ? 1.25 : m === "te" ? 0.86 : 1);
+    const baseOf = (m: Model) => (m === "tw" ? 1.25 : m === "te" ? 1.29 : 1);
     const groupOf = (m: Model) =>
       m === "tw" ? tower.group : m === "te" ? terrace.group : lblock;
     const unitsOf = (m: Model) =>
