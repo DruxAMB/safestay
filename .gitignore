@@ -41,3 +41,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 dev.log
+
+# local debug artifacts
+dev*.log
+shot-*.png
+
+# seed output holding a private key - never commit
+scripts/seed-results-extra.json
