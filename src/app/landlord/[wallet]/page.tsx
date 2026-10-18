@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { io } from "next/cache";
 import { isAddress, type Address } from "viem";
 import { getLandlordHistory, getProfile } from "@/lib/arkiv/queries";
+import { SEED_LABELS } from "@/lib/arkiv/config";
 import { HistoryView } from "@/components/HistoryView";
 import { LiveWatcher } from "@/components/LiveWatcher";
 import { WalletAvatar } from "@/components/WalletAvatar";
@@ -51,7 +52,9 @@ async function LandlordTitle({ wallet }: { wallet: string }) {
   const profile = await bound(getProfile(wallet as Address), "profile").catch(() => null);
   return (
     <h1 className="text-xl font-medium">
-      {profile?.name ? `${profile.name} — deposit history` : "Deposit history"}
+      {profile?.name || SEED_LABELS[wallet.toLowerCase()]
+        ? `${profile?.name ?? SEED_LABELS[wallet.toLowerCase()]} — deposit history`
+        : "Deposit history"}
     </h1>
   );
 }

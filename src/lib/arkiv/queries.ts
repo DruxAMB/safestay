@@ -2,7 +2,7 @@ import "server-only";
 import { eq, type Expression } from "@arkiv-network/sdk/query";
 import { addr, key, str } from "@arkiv-network/sdk/attr";
 import { isAddressEqual, type Address, type Hex } from "viem";
-import { PROJECT, type Outcome, type EvidenceKind } from "./config";
+import { PROJECT, SEED_LABELS, type Outcome, type EvidenceKind } from "./config";
 import { createReader, type ArkivReader } from "./clients";
 import {
   attrAddr,
@@ -293,7 +293,9 @@ function buildDirectory(
         address: termsEntities.find(
           (t) => (t.creator as string).toLowerCase() === addrLc,
         )!.creator as string,
-        name: p?.name || undefined,
+        // Self-signed profile name wins; SEED_LABELS is a display hint for
+        // seeded wallets whose keys weren't persisted (see config.ts).
+        name: p?.name || SEED_LABELS[addrLc] || undefined,
         city: p?.city || undefined,
         termsCount,
       };

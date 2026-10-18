@@ -36,6 +36,15 @@ export const TOWER_LANDLORD =
 export const TERRACE_LANDLORD =
   "0x93d5e7ebe836cbe54dcc10f2a9be68d5deaa7139" as const;
 
+/** Display labels for seeded demo landlords whose burner keys were never
+ *  persisted — they can no longer self-sign a `landlord_profile`, so the
+ *  name is a local demo hint, NOT an on-chain claim. When a profile entity
+ *  exists (Sunrise, Skyline) it always wins over this map. */
+export const SEED_LABELS: Record<string, string> = {
+  "0x28afa844a91910f947017c08e5e158c551a55d2b": "Sharma Properties",
+  "0x93d5e7ebe836cbe54dcc10f2a9be68d5deaa7139": "Lakeview Homes",
+};
+
 /** Static render used for a landlord's chip avatar and the mobile hero
  *  fallback — mirrors the live 3D model each seeded landlord gets. */
 export function heroImgFor(addr?: string | null) {
