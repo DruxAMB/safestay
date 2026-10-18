@@ -31,6 +31,20 @@ export const OUTCOME_LABEL: Record<Outcome, string> = {
 export const TOWER_LANDLORD =
   "0x5cf8600bbadefd56a70381b8e71eb332d598b2d3" as const;
 
+/** Seeded demo landlord that gets the stepped terraced model — Lakeview
+ *  Homes. */
+export const TERRACE_LANDLORD =
+  "0x93d5e7ebe836cbe54dcc10f2a9be68d5deaa7139" as const;
+
+/** Static render used for a landlord's chip avatar and the mobile hero
+ *  fallback — mirrors the live 3D model each seeded landlord gets. */
+export function heroImgFor(addr?: string | null) {
+  const a = addr?.toLowerCase();
+  if (a === TOWER_LANDLORD) return "/hero-tower.png";
+  if (a === TERRACE_LANDLORD) return "/hero-terrace.png";
+  return "/hero-building.png";
+}
+
 export function explorerEntityUrl(key: string) {
   return `${EXPLORER}/entity/${key}`;
 }

@@ -5,7 +5,7 @@ import { useState, useId, useTransition } from "react";
 import { ArrowRight, Loader2, Search } from "lucide-react";
 import { Button, Input, Label } from "@/components/ui";
 import { shortAddr } from "@/lib/format";
-import { TOWER_LANDLORD } from "@/lib/arkiv/config";
+import { heroImgFor } from "@/lib/arkiv/config";
 import { useHeroSelection } from "./HeroSelection";
 import { useToast } from "./Toaster";
 
@@ -137,7 +137,7 @@ export function LookupForm({ directory, directoryNote }: {
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={l.address.toLowerCase() === TOWER_LANDLORD ? "/hero-tower.png" : "/hero-building.png"}
+              src={heroImgFor(l.address)}
               alt="" aria-hidden
               className="size-6 shrink-0 rounded-full border border-border object-cover"
             />

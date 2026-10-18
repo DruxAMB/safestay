@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { useHeroSelection } from "./HeroSelection";
 import { inr, shortAddr, shortKey } from "@/lib/format";
-import { TOWER_LANDLORD } from "@/lib/arkiv/config";
+import { TERRACE_LANDLORD, TOWER_LANDLORD } from "@/lib/arkiv/config";
 import type { TermsDto } from "@/lib/arkiv/schema";
 
 const WALL = 0xf5f0e6; // warm paper-cream facade
@@ -83,6 +83,8 @@ const unitMat = () =>
 
 type UnitSlot = { x: number; y: number; z: number; ry: number };
 
+type Model = "lb" | "tw" | "te";
+
 type World = {
   glow: THREE.Group;
   lock: THREE.Group;
@@ -95,9 +97,11 @@ type World = {
   units: THREE.Group;
   towerUnits: THREE.Group;
   towerSlots: UnitSlot[];
-  activeModel: "lb" | "tw";
-  swap: { phase: "idle" | "out" | "in"; t0: number; from: "lb" | "tw"; to: "lb" | "tw" };
-  applyModel?: (m: "lb" | "tw") => void;
+  terraceUnits: THREE.Group;
+  terraceSlots: UnitSlot[];
+  activeModel: Model;
+  swap: { phase: "idle" | "out" | "in"; t0: number; from: Model; to: Model };
+  applyModel?: (m: Model) => void;
   hover: THREE.Mesh | null;
   tip: HTMLDivElement | null;
   now: () => number;
@@ -179,10 +183,14 @@ function tickUnits(children: THREE.Object3D[], t: number) {
   }
 }
 
-/** Seeded landlords → model: Skyline Towers gets the high-rise, everyone
- *  else the mid-rise L-block. */
-const modelOf = (sel: string | null): "lb" | "tw" =>
-  sel?.toLowerCase() === TOWER_LANDLORD ? "tw" : "lb";
+/** Seeded landlords → model: Skyline Towers gets the high-rise, Lakeview
+ *  Homes the stepped terraces, everyone else the mid-rise L-block. */
+const modelOf = (sel: string | null): Model =>
+  sel?.toLowerCase() === TOWER_LANDLORD
+    ? "tw"
+    : sel?.toLowerCase() === TERRACE_LANDLORD
+      ? "te"
+      : "lb";
 
 /** Tall narrow window: dark inset panel + center mullion → two panes. */
 function windowUnit(w = 0.26, h = 0.62) {
@@ -413,6 +421,99 @@ function buildTower() {
   return { group: g, units, slots, lock, lockHome, bandMat };
 }
 
+/** The lakeside reference rebuilt: a stepped ziggurat — seven floors that
+ *  shrink in width and recede toward the back, each step a projecting
+ *  terrace slab; a lime band wraps the fourth floor, dark padlock floats
+ *  beside it, and a still water pool sits on the plinth's front-right.
+ *  Lakeview Homes swaps to this model. */
+function buildTerrace() {
+  const g = new THREE.Group();
+  const FL = 7, FH = 0.9;
+  const W0 = 4.2, D0 = 2.7;
+  const fw = (i: number) => W0 - i * 0.36; // narrower each floor
+  const fd = (i: number) => D0 - i * 0.28; // shallower each floor
+  const fz = (i: number) => -0.2 - i * 0.12; // recede toward the back
+  const fy = (i: number) => i * FH + FH / 2;
+  const frontZ = (i: number) => fz(i) + fd(i) / 2;
+  const GF = 3; // band floor — mid-stack like the reference
+
+  // Plinth + the dark water pool at the front-right corner.
+  g.add(box(6.8, 0.14, 5.2, BASE, 0, 0.07, 0));
+  g.add(box(3.0, 0.06, 1.9, 0x22404f, 1.9, 0.17, 1.55, { rough: 0.28 }));
+
+  for (let i = 0; i < FL; i++) {
+    const w = fw(i), d = fd(i);
+    // projecting terrace slab — the step ledge this floor stands on
+    g.add(box(w + 0.62, 0.09, d + 0.62, SLAB, 0, i * FH + 0.045, fz(i)));
+    g.add(box(w, FH * 0.88, d, WALL, 0, fy(i) - 0.04, fz(i)));
+    // front window pairs sized to the floor's width (the band floor's front
+    // is covered by the glow, so skip its windows)
+    if (i !== GF) {
+      const n = Math.max(1, Math.floor((w - 0.8) / 0.86));
+      for (let k = 0; k < n; k++) {
+        const cx = n === 1 ? 0 : -w / 2 + 0.5 + (k * (w - 1)) / (n - 1);
+        g.add(put(windowPair(), "front", cx, fy(i), frontZ(i) + 0.02));
+      }
+      for (const cz of [0.4, -0.4])
+        g.add(put(windowUnit(0.22, 0.55), "right", w / 2 + 0.02, fy(i), fz(i) + cz));
+    }
+  }
+
+  // Parapet tray + bulkhead crown on the top floor — same roof detail as
+  // the other models.
+  const rg = roof(fw(FL - 1), fd(FL - 1), FL * FH - 0.06);
+  rg.position.z = fz(FL - 1);
+  g.add(rg);
+
+  // Lime band on floor GF — wraps the right corner, lit slots inside,
+  // spill light, same recipe as the tower band.
+  const gw = fw(GF), gd = fd(GF);
+  const bandMat = mat(0xf8ffcf, { emissive: ACCENT, ei: 1.15, rough: 0.4 });
+  const band = new THREE.Group();
+  band.add(new THREE.Mesh(new THREE.BoxGeometry(gw + 0.08, FH * 0.85, 0.12), bandMat));
+  band.add(
+    box(0.12, FH * 0.85, gd * 0.55, 0xf8ffcf, gw / 2 + 0.04, 0, -gd * 0.18, {
+      emissive: ACCENT, ei: 1.0, rough: 0.4,
+    }),
+  );
+  const nb = Math.max(2, Math.floor(gw / 0.95));
+  for (let k = 0; k < nb; k++) {
+    const ox = nb === 1 ? 0 : -gw / 2 + 0.45 + (k * (gw - 0.9)) / (nb - 1);
+    band.add(box(0.5, FH * 0.58, 0.13, 0xecff5e, ox, 0, 0.06, { emissive: ACCENT, ei: 0.9, rough: 0.3 }));
+    band.add(box(0.035, FH * 0.58, 0.14, MULLION, ox, 0, 0.065));
+  }
+  const spill = new THREE.PointLight(ACCENT, 14, 5.5, 2);
+  spill.position.set(0, 0.1, 0.8);
+  band.add(spill);
+  band.position.set(0, fy(GF), frontZ(GF) + 0.05);
+  g.add(band);
+
+  // Dark padlock floating right of the band — charcoal variant like the
+  // tower's, no tether in the reference.
+  const lock = padlock(true);
+  lock.scale.setScalar(1.35);
+  const lockHome = new THREE.Vector3(gw / 2 + 1.3, fy(GF) + 0.25, frontZ(GF) + 0.55);
+  lock.position.copy(lockHome);
+  g.add(lock);
+
+  // Unit-marker slots — front + right face per floor (the band owns GF).
+  const slots: UnitSlot[] = [];
+  for (let f = 0; f < FL; f++) {
+    if (f === GF) continue;
+    const w = fw(f);
+    const n = Math.max(1, Math.floor((w - 0.8) / 0.86));
+    for (let k = 0; k < n; k++) {
+      const x = n === 1 ? 0 : -w / 2 + 0.5 + (k * (w - 1)) / (n - 1);
+      slots.push({ x, y: fy(f), z: frontZ(f) + 0.08, ry: 0 });
+    }
+    for (const cz of [0.4, -0.4])
+      slots.push({ x: w / 2 + 0.08, y: fy(f), z: fz(f) + cz, ry: Math.PI / 2 });
+  }
+  const units = new THREE.Group();
+  g.add(units);
+  return { group: g, units, slots, lock, lockHome, bandMat };
+}
+
 /** Soft blob shadow — canvas radial gradient, offset right-back like the ref. */
 function blobShadow() {
   const c = document.createElement("canvas");
@@ -465,10 +566,13 @@ export function BuildingScene({ className = "" }: { className?: string }) {
     w.applyModel?.(model);
     w.targetGlowY = floorYAt(floorFor(model === "lb" ? selected : null));
     const isTower = (t: TermsDto) => t.creator.toLowerCase() === TOWER_LANDLORD;
-    syncUnits(w, w.units, SLOTS, all.filter((t) => !isTower(t)));
+    const isTerrace = (t: TermsDto) => t.creator.toLowerCase() === TERRACE_LANDLORD;
+    syncUnits(w, w.units, SLOTS, all.filter((t) => !isTower(t) && !isTerrace(t)));
     syncUnits(w, w.towerUnits, w.towerSlots, all.filter(isTower));
+    syncUnits(w, w.terraceUnits, w.terraceSlots, all.filter(isTerrace));
     applySel(w, w.units, selected);
     applySel(w, w.towerUnits, selected);
+    applySel(w, w.terraceUnits, selected);
     if (w.reduce) {
       w.glow.position.y = w.targetGlowY;
       w.lock.position.y = w.targetGlowY + 0.3;
@@ -587,7 +691,15 @@ export function BuildingScene({ className = "" }: { className?: string }) {
     // deliberately crops above the frame (skyscraper framing).
     tower.group.scale.setScalar(1.25);
     tower.group.position.x = 0.3;
-    building.add(lblock, tower.group);
+
+    // Third model: the stepped lakeside block for Lakeview (hidden until
+    // their chip / unit is selected). Slightly smaller + lifted so the
+    // plinth and water pool stay inside the frame.
+    const terrace = buildTerrace();
+    terrace.group.visible = false;
+    terrace.group.scale.setScalar(0.86);
+    terrace.group.position.set(0.3, 0.5, 0.1);
+    building.add(lblock, tower.group, terrace.group);
 
     // Anchor lower-right of the full-bleed canvas: the dossier overlaps its
     // lower-left corner; headline column stays clear.
@@ -602,6 +714,7 @@ export function BuildingScene({ className = "" }: { className?: string }) {
       glow, lock, tetherGeo: lineGeo, tetherMat, spill,
       renderer, scene, camera, units,
       towerUnits: tower.units, towerSlots: tower.slots,
+      terraceUnits: terrace.units, terraceSlots: terrace.slots,
       activeModel: "lb",
       swap: { phase: "idle", t0: 0, from: "lb", to: "lb" },
       hover: null, tip: tipRef.current, now: () => clock.getElapsedTime(),
@@ -610,10 +723,13 @@ export function BuildingScene({ className = "" }: { className?: string }) {
     world.current = w;
     // Snapshot terms may already be registered when the scene mounts.
     const isTowerTerm = (t: TermsDto) => t.creator.toLowerCase() === TOWER_LANDLORD;
-    syncUnits(w, units, SLOTS, stRef.current.terms.filter((t) => !isTowerTerm(t)));
+    const isTerraceTerm = (t: TermsDto) => t.creator.toLowerCase() === TERRACE_LANDLORD;
+    syncUnits(w, units, SLOTS, stRef.current.terms.filter((t) => !isTowerTerm(t) && !isTerraceTerm(t)));
     syncUnits(w, tower.units, tower.slots, stRef.current.terms.filter(isTowerTerm));
+    syncUnits(w, terrace.units, terrace.slots, stRef.current.terms.filter(isTerraceTerm));
     applySel(w, units, stRef.current.selected);
     applySel(w, tower.units, stRef.current.selected);
+    applySel(w, terrace.units, stRef.current.selected);
 
     // Drag-to-rotate (empty hero space drags the tower) + padlock click-verify
     const canvas = renderer.domElement;
@@ -663,8 +779,8 @@ export function BuildingScene({ className = "" }: { className?: string }) {
           -((e.clientY - r.top) / r.height) * 2 + 1,
         );
         rc.setFromCamera(ndc, camera);
-        const actUnits = (w.activeModel === "tw" ? w.towerUnits : w.units).children;
-        const actLock = w.activeModel === "tw" ? tower.lock : lock;
+        const actUnits = unitsOf(w.activeModel).children;
+        const actLock = lockOf(w.activeModel);
         const hitUnit = rc.intersectObjects(actUnits, false)[0];
         if (hitUnit) {
           // Clicking a lit unit selects its landlord — same as a chip.
@@ -685,12 +801,12 @@ export function BuildingScene({ className = "" }: { className?: string }) {
         -((e.clientY - r.top) / r.height) * 2 + 1,
       );
       rc.setFromCamera(ndc, camera);
-      const actUnits = (w.activeModel === "tw" ? w.towerUnits : w.units).children;
+      const actUnits = unitsOf(w.activeModel).children;
       const hit =
         (rc.intersectObjects(actUnits, false)[0]?.object as
           | THREE.Mesh
           | undefined) ?? null;
-      const actLock = w.activeModel === "tw" ? tower.lock : lock;
+      const actLock = lockOf(w.activeModel);
       const overLock = !hit && rc.intersectObject(actLock, true).length > 0;
       if (hit !== w.hover) {
         if (w.hover) w.hover.userData.hovered = false;
@@ -733,8 +849,13 @@ export function BuildingScene({ className = "" }: { className?: string }) {
     // incoming one rises out of the ground (scaleY collapse / rise). Called
     // from the React selection effect via the world object. Re-clicks during
     // a transition retarget cleanly: the model on screen becomes `from`.
-    const baseOf = (m: "lb" | "tw") => (m === "tw" ? 1.25 : 1);
-    const groupOf = (m: "lb" | "tw") => (m === "tw" ? tower.group : lblock);
+    const baseOf = (m: Model) => (m === "tw" ? 1.25 : m === "te" ? 0.86 : 1);
+    const groupOf = (m: Model) =>
+      m === "tw" ? tower.group : m === "te" ? terrace.group : lblock;
+    const unitsOf = (m: Model) =>
+      m === "tw" ? w.towerUnits : m === "te" ? w.terraceUnits : w.units;
+    const lockOf = (m: Model) =>
+      m === "tw" ? tower.lock : m === "te" ? terrace.lock : lock;
     w.applyModel = (m) => {
       if (w.swap.to === m && w.swap.phase !== "idle") return; // already en route
       if (w.swap.phase === "idle" && w.activeModel === m) return;
@@ -746,6 +867,7 @@ export function BuildingScene({ className = "" }: { className?: string }) {
       if (reduce) {
         groupOf("lb").visible = m === "lb";
         groupOf("tw").visible = m === "tw";
+        groupOf("te").visible = m === "te";
         groupOf(m).scale.setScalar(baseOf(m));
         w.swap = { phase: "idle", t0: 0, from: m, to: m };
         paint();
@@ -775,18 +897,22 @@ export function BuildingScene({ className = "" }: { className?: string }) {
     const frame = () => {
       const t = clock.getElapsedTime();
       const tw = w.activeModel === "tw";
+      const te = w.activeModel === "te";
       // The glow rides to the selected landlord's floor (L-block only).
-      if (!tw) glow.position.y += (w.targetGlowY - glow.position.y) * 0.12;
+      if (w.activeModel === "lb")
+        glow.position.y += (w.targetGlowY - glow.position.y) * 0.12;
       const gy = glow.position.y;
       building.rotation.y = Math.sin(t * 0.18) * 0.045 + px * 0.08 + w.dragOff;
       building.rotation.x = py * 0.025;
       // Padlock verify pulse — fires on whichever model is showing
       const pulse = Math.max(0, 1 - (t - w.verifyAt) / 0.7);
       const s = pulse > 0 ? Math.sin(Math.PI * pulse) : 0;
-      const actLock = tw ? tower.lock : lock;
-      actLock.scale.setScalar((tw ? 1.4 : 1.3) * (1 + 0.35 * s));
+      const actLock = lockOf(w.activeModel);
+      actLock.scale.setScalar((tw ? 1.4 : te ? 1.35 : 1.3) * (1 + 0.35 * s));
       if (tw) {
         tower.bandMat.emissiveIntensity = 1.15 + 1.4 * s;
+      } else if (te) {
+        terrace.bandMat.emissiveIntensity = 1.15 + 1.4 * s;
       } else {
         spill.intensity = 14 + 34 * s;
         tetherMat.opacity = 0.45 + 0.55 * s;
@@ -799,6 +925,12 @@ export function BuildingScene({ className = "" }: { className?: string }) {
         tower.lockHome.z,
       );
       tower.lock.rotation.y = Math.sin(t * 0.7) * 0.4;
+      terrace.lock.position.set(
+        terrace.lockHome.x,
+        terrace.lockHome.y + Math.sin(t * 1.05) * 0.11,
+        terrace.lockHome.z,
+      );
+      terrace.lock.rotation.y = Math.sin(t * 0.7) * 0.4;
       // tether tracks glow floor + bobbing lock
       const pts = lineGeo.attributes.position as THREE.BufferAttribute;
       pts.setXYZ(0, glowX + glowW / 2 + 0.05, gy + 0.15, frontB + 0.06);
@@ -837,6 +969,7 @@ export function BuildingScene({ className = "" }: { className?: string }) {
       // hover. Each lit pane is one real entity on Arkiv.
       tickUnits(units.children, t);
       tickUnits(tower.units.children, t);
+      tickUnits(terrace.units.children, t);
       if (w.hover) positionTip(); // the tower drifts — track the marker
       renderer.render(scene, camera);
       raf = requestAnimationFrame(frame);
