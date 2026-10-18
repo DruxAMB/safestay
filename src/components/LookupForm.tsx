@@ -141,7 +141,7 @@ export function LookupForm({ directory, directoryNote }: {
               alt="" aria-hidden
               className="size-6 shrink-0 rounded-full border border-border object-cover"
             />
-            <span className="font-medium">{l.name ?? shortAddr(l.address, 3, 3)}</span>
+            <span className="font-medium">{l.name ?? shortAddr(l.address, 2, 2)}</span>
             <span className="font-mono text-xs text-muted-foreground">
               {l.name ? shortAddr(l.address, 3, 3) : `${l.termsCount} terms`}
             </span>
