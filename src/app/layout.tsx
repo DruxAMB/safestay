@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Inter, Geist_Mono } from "next/font/google";
-import { ShieldCheck } from "lucide-react";
+import { SafeStayMark } from "@/components/SafeStayMark";
 import { WalletProvider } from "@/components/WalletProvider";
 import { ToastProvider } from "@/components/Toaster";
 import { LinkHint } from "@/components/LinkHint";
@@ -45,7 +45,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <header className="border-b border-border bg-background bg-stipple">
           <nav className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4 sm:gap-5 sm:px-6" aria-label="Main">
             <Link href="/" className="flex items-center gap-2 font-medium">
-              <ShieldCheck size={20} className="text-primary" aria-hidden />
+              <SafeStayMark size={24} />
               SafeStay
               <LinkHint />
             </Link>
