@@ -90,7 +90,7 @@ export function NavLoader() {
 
   if (!visible) return null;
   return (
-    <div className="pop-in fixed inset-0 z-40 flex items-center justify-center bg-background/85 backdrop-blur-[2px]">
+    <div className="pop-in fixed inset-0 z-40 flex items-center justify-center bg-background/85 backdrop-blur-sm">
       <BuildingLoader />
     </div>
   );

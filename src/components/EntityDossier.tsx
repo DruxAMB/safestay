@@ -106,9 +106,10 @@ export function EntityDossier({ entity, snapshot }: { entity: TermsDto; snapshot
         <div className="flex items-center justify-between border-t border-foreground/40 px-4 py-2">
           <Link
             href={`/landlord/${entity.creator}`}
-            className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground underline-offset-2 transition-colors [@media(hover:hover)]:hover:text-foreground [@media(hover:hover)]:hover:underline"
+            className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground transition-colors [@media(hover:hover)]:hover:text-foreground"
           >
-            Signed by {shortAddr(entity.creator)}
+            Signed by{" "}
+            <span className="underline underline-offset-2">{shortAddr(entity.creator)}</span>
             <LinkHint />
           </Link>
           <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
