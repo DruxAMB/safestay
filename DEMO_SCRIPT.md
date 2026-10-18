@@ -1,46 +1,71 @@
-# SafeStay — Demo Video Script (v2, current app)
+# SafeStay — Demo Video Script (v3)
 
-**Cap:** 3:00 · **Target runtime:** ~2:35 · **Format:** screen recording + voiceover, recorded by the Indian teammate.
-**Budget note:** the nav-loading screen holds ~3.4s on every page change by design — narrate over it ("while it reads the chain"), don't cut it. ~10s of the runtime is loader.
+**Cap:** 3:00 (hard rule) · **Target:** ~2:10 · **Format:** screen recording + voiceover, recorded by the Indian teammate.
+**Read it like you're showing a friend the app, not narrating an ad.** Contractions, short sentences, slight pauses while the cursor does its thing — silence during a load is fine if the visual carries it.
+**Nav loader:** ~3.4s per page change by design — talk over it ("while it reads the chain"), don't cut around it. ~8s of runtime is loader.
 
-**Recording mode decision (pick before rolling):**
-- **Primary — demo mode** (`/record` → "No wallet? Demo mode"): deterministic, no extension dance, still real Arkiv writes signed by the seeded wallets. Recommended.
-- **Alternate — real wallet:** more impressive (MetaMask popup on camera), but requires the recording wallet to be funded on Tiramisu and adds ~20s of popup time. Use only if rehearsed twice clean.
+**Recording mode:** **demo mode** (`/record` → "No wallet?") — deterministic, still real Arkiv writes. Real-MetaMask signing only if the recording wallet is funded on Tiramisu and rehearsed twice clean.
 
-**Pre-record checklist (run the morning of):**
-- [ ] `npm run dev` or the deployed URL loads; feed shows ~40 entities
-- [ ] `/record` → demo mode → outcome select lists `btm_pg_bed_10 · ₹26,000` (fresh open terms for demo tenant — created entity `0x6f4d631b…`; if answered since, sign another via the terms form below it)
-- [ ] Hard-refresh once so first nav isn't cold-slow beyond the loader dwell
-- [ ] Incognito check: no console errors; 1440×900+ window, zoom 100%
-- [ ] If recording the wallet path: MetaMask unlocked, on Tiramisu, GLM > 0
+**Pre-record checklist:**
+- [ ] App loads; `/feed` shows ~40 entities
+- [ ] `/record` → demo mode → outcome select lists `btm_pg_bed_10 · ₹26,000` (if it's gone, sign another open terms with the terms form below it)
+- [ ] One hard refresh so the first nav isn't cold-slow beyond the loader
+- [ ] Incognito, 1440×900+, zoom 100%, no console errors, no bookmarks bar
 
 ---
 
-## Shot list
+## Shot 1 — Hero (0:00–0:15)
+**Do:** hover the 3D building — units ignite. Click the **Sunrise PG** chip — building collapses, L-block rises, dossier swaps in.
 
-| # | Time | Screen | Action | VO (read verbatim) |
-|---|------|--------|--------|--------------------|
-| 1 | 0:00–0:15 | `/` hero | Hover the 3D building — units ignite; click the **Sunrise PG** chip — the building collapses and the L-block rises, dossier swaps in | "Every year, renters in India hand landlords twenty thousand to a lakh of rupees — with no way to check who kept the last tenant's deposit. SafeStay puts that history on a public database nobody controls." |
-| 2 | 0:15–0:35 | `/` → `/landlord/0x99Ba…24f7` | Click **Check history** → loader: "it restructures while it reads the chain" → history page lands: **24% returned** bar, `kept ₹28,000` figures, red-amber pattern strip | "This is Sunrise PG's record on Tiramisu — five signed deposits, one point four lakh promised, a third returned. Every outcome is signed by a tenant's wallet, and verified only if the landlord's own terms named that wallet back. Fake reviews need the landlord's signature — which incriminates them." |
-| 3 | 0:35–0:50 | same page | Click an outcome's explorer link → Tiramisu explorer shows the real entity, `$creator` = tenant wallet | "Not our database — Arkiv. This entity is signed, typed, and expiring, readable by anyone, editable by no one — including us." |
-| 4 | 0:50–1:05 | `/feed` | Click Feed → loader → live ledger scrolls: terms, outcomes, evidence, severity edges, `history` links | "Every record SafeStay ever writes lands here in real time — served by Arkiv's WebSocket event stream, newest first." |
-| 5 | 1:05–1:45 | `/record` | Open **Demo mode** → *Record an outcome* → pick `btm_pg_bed_10 · ₹26,000` → outcome "Returned partially", returned `10000`, attach any file → hashes in-browser → **Record outcome** → one tx, two entities; toast + explorer links | "Now the tenant's side. This file never leaves the browser — only its SHA-256 goes on-chain. One batch transaction writes the outcome and the evidence atomically." |
-| 6 | 1:45–2:00 | back to `/landlord/0x99Ba…24f7` | The **Live on Arkiv** badge; the new outcome is already in the list — return % has dropped, pattern strip gained a dot | "And the public record just changed — no refresh, straight off the event stream. This is the moment a renter in Bangalore checks before paying sixty thousand." |
-| 7 | 2:00–2:20 | `/record` landlord section | *Sign terms as demo landlord* → fill label/city/deposit → **Sign deposit terms** → entity link + note the `+12mo` renew affordance | "The landlord's side is a signature too — terms they can't edit later. And when a tenancy renews, the record extends — Entity Expiration and Lifetime Extension, native to Arkiv." |
-| 8 | 2:20–2:35 | `/about` | Scroll the query list + creator directory, end on "Postgres / IPFS / API" section | "Every record expires in about thirty months — the truth outlives this app, not the person. Postgres can be edited by whoever runs it. This can't. SafeStay — deposit history landlords can't rewrite." |
+**Say:**
+> "So here's a problem anyone who's rented in India knows. You hand the landlord sixty, eighty thousand rupees — and you've got no way to check if the last tenant ever saw theirs again. SafeStay is a public track record for that."
 
-## Cut if running long (in order)
-1. Step 4 feed beat (−15s) — it's a bonus surface, not the money shot.
-2. Step 7 landlord write (−20s) — the terms signature matters less than the outcome linkage; mention it in VO during step 5 instead.
-3. Step 8 → cut to a 5s hold on the history page over the closing line.
+## Shot 2 — Landlord history (0:15–0:40)
+**Do:** click **Check history** → loader plays → history page lands. Let the **24% returned** bar, `kept ₹28,000` figures and the red-amber dot strip sit on screen a beat. Scroll the outcome cards slowly.
+
+**Say:**
+> "This is Sunrise PG's record on Tiramisu — five deposits signed on-chain. They promised back about 1.4 lakh across those stays… and returned a third of it. You can see each one — kept twenty-eight here, kept twenty-five there. Every outcome is signed by a tenant's wallet — and it only counts as verified if the landlord's own terms named that tenant back. So you can't fake the reviews."
+
+## Shot 3 — Explorer (0:40–0:50)
+**Do:** click an outcome's explorer link → Tiramisu explorer: real entity, `$creator` = the tenant wallet. Hover the creator field.
+
+**Say:**
+> "And this isn't our database — it's Arkiv. That's the actual entity, signed by the tenant's own wallet. Anyone can read it — nobody can edit it, including us."
+
+## Shot 4 — The write (0:50–1:25)
+**Do:** `/record` → open **Demo mode** → *Record an outcome* → pick `btm_pg_bed_10 · ₹26,000` → "Returned partially", amount `10000`, attach any file (watch it hash) → **Record outcome** → toast + explorer links in the success card.
+
+**Say:**
+> "Now the other side. I'm acting as a tenant — pick my terms, say I got ten of twenty-six back, attach a photo as evidence. The file never leaves the browser — only its hash goes on-chain. One transaction, two entities — outcome plus evidence, atomically."
+
+## Shot 5 — Live update (1:25–1:45)
+**Do:** navigate back to Sunrise's history. Pause on the **Live on Arkiv** badge, then the fresh outcome already in the list — lower return %, extra red dot on the strip.
+
+**Say:**
+> "Go back to the landlord's page and it's already there — the page listens to Arkiv's event stream, no refresh. That's exactly what a renter checks before handing over sixty thousand."
+
+## Shot 6 — Close (1:45–2:10)
+**Do:** `/about` — scroll slowly past the query list and the "Postgres / IPFS / API" section, stop on the last line.
+
+**Say:**
+> "Every record expires in about thirty months — the history outlives this app, not the person. Postgres can be edited by whoever runs it. This can't. SafeStay — deposit history landlords can't rewrite."
+
+---
+
+## Cut list if it still runs long
+1. **Shot 3's pause** — trim the explorer hover to a 3s flash (−5s).
+2. **Shot 4's form detail** — cut to submit + success card (−10s), mention the hash in VO only.
+3. **Cold open** — start on Shot 2's click, hero VO over the dossier (−8s). Hero interaction is the flashiest asset though — cut this last.
+
+## Optional insert — live feed (adds ~15s, only if under time)
+Between shots 3 and 4: `/feed` — "There's also just a live feed of everything hitting the chain — terms, outcomes, evidence, newest first." Scroll it slowly.
 
 ## Do NOT show on camera
-- `.env.local`, private keys, the seed script's key material
-- Demo-mode internals beyond what the UI states (it already says "seeded wallets" on screen — that's the honest disclosure)
-- Browser chrome beyond the viewport if the profile has personal bookmarks
+- `.env.local`, private keys, seed-script key material
+- Browser chrome with personal bookmarks; anything outside the app viewport
 
 ## Numbers a judge will fact-check (all live on-chain)
 - Sunrise PG `0x99Ba…24f7`: 5 outcomes / 5 terms / 24% returned / ₹1.4L promised / ₹34,000 returned / ₹1.1L withheld / 5-of-5 verified
 - Skyline Towers `0x5cf8…b2D3`: 3 terms / 2 outcomes / 1 awaiting
-- Step 5 writes `deposit_outcome` + evidence `executeBatch` — one tx hash, two entity keys, both in the success card
-- Explorer: `tiramisu.explorer.arkiv.network/entity/<key>` — every link on screen resolves
+- The write = `executeBatch` — one tx hash, two entity keys, both shown in the success card
+- Every entity link resolves at `tiramisu.explorer.arkiv.network/entity/<key>`
