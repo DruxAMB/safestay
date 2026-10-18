@@ -71,7 +71,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <Suspense><NavLoader /></Suspense>
         <footer className="border-t border-border-inverse bg-surface-inverse">
           <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-1 px-4 py-4 text-xs text-text-inverse-muted sm:px-6">
-            <span>Built on Arkiv · Tiramisu testnet · Next.js</span>
+            <span>
+              Built on Arkiv by{" "}
+              <a href="https://druxamb.dev" target="_blank" rel="noopener noreferrer"
+                 className="text-text-inverse underline underline-offset-2">
+                DruxAMB
+              </a>{" "}
+              · Tiramisu testnet · Next.js
+            </span>
             <a href="https://tiramisu.explorer.arkiv.network" target="_blank" rel="noopener noreferrer"
                className="text-text-inverse underline underline-offset-2">
               Tiramisu explorer
