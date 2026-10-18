@@ -65,7 +65,7 @@ export function ConnectWallet() {
             t.info("Wallet disconnected");
           }}
           aria-label="Disconnect wallet"
-          className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-md text-text-inverse-muted transition-colors [@media(hover:hover)]:hover:bg-white/5 [@media(hover:hover)]:hover:text-text-inverse"
+          className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-md text-muted-foreground transition-colors [@media(hover:hover)]:hover:bg-foreground/5 [@media(hover:hover)]:hover:text-foreground"
         >
           <LogOut size={14} aria-hidden />
         </button>

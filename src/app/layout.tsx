@@ -42,7 +42,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="flex min-h-full flex-col">
         <ToastProvider>
         <WalletProvider>
-        <header className="border-b border-border-inverse bg-surface-inverse text-text-inverse">
+        <header className="border-b border-border bg-background bg-stipple">
           <nav className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4 sm:gap-5 sm:px-6" aria-label="Main">
             <Link href="/" className="flex items-center gap-2 font-medium">
               <ShieldCheck size={20} className="text-primary" aria-hidden />
@@ -50,15 +50,15 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               <LinkHint />
             </Link>
             <div className="ml-auto flex items-center gap-0.5 text-sm">
-              <Link href="/feed" className="min-h-11 inline-flex items-center rounded-md px-2 text-text-inverse-muted transition-colors sm:px-3 [@media(hover:hover)]:hover:bg-white/5 [@media(hover:hover)]:hover:text-text-inverse">
+              <Link href="/feed" className="min-h-11 inline-flex items-center rounded-md px-2 text-muted-foreground transition-colors sm:px-3 [@media(hover:hover)]:hover:bg-foreground/5 [@media(hover:hover)]:hover:text-foreground">
                 Feed
                 <LinkHint />
               </Link>
-              <Link href="/record" className="min-h-11 inline-flex items-center rounded-md px-2 text-text-inverse-muted transition-colors sm:px-3 [@media(hover:hover)]:hover:bg-white/5 [@media(hover:hover)]:hover:text-text-inverse">
+              <Link href="/record" className="min-h-11 inline-flex items-center rounded-md px-2 text-muted-foreground transition-colors sm:px-3 [@media(hover:hover)]:hover:bg-foreground/5 [@media(hover:hover)]:hover:text-foreground">
                 Record
                 <LinkHint />
               </Link>
-              <Link href="/about" className="min-h-11 inline-flex items-center rounded-md px-2 text-text-inverse-muted transition-colors sm:px-3 [@media(hover:hover)]:hover:bg-white/5 [@media(hover:hover)]:hover:text-text-inverse">
+              <Link href="/about" className="min-h-11 inline-flex items-center rounded-md px-2 text-muted-foreground transition-colors sm:px-3 [@media(hover:hover)]:hover:bg-foreground/5 [@media(hover:hover)]:hover:text-foreground">
                 About
                 <LinkHint />
               </Link>
