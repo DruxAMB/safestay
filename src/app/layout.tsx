@@ -75,7 +75,15 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
                className="text-text-inverse underline underline-offset-2">
               Tiramisu explorer
             </a>
-            <span className="ml-auto">Synthetic demo data — no real tenants or landlords</span>
+            <span className="ml-auto">
+              Synthetic demo data — tenants or landlords can{" "}
+              <Link
+                href="/record"
+                className="text-text-inverse underline underline-offset-2"
+              >
+                register at /record<LinkHint />
+              </Link>
+            </span>
           </div>
         </footer>
         </WalletProvider>
