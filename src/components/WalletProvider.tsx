@@ -83,19 +83,24 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       // let EIP-6963 announcements land so a stored wallet selection resolves
       // to its real provider before we probe it
       await new Promise((r) => setTimeout(r, 300));
-      const a = await withTimeout(currentAccount(), 2500, null);
-      if (!live) return;
-      if (a) {
-        const eth = getProvider();
-        const chain = (await withTimeout(
-          eth?.request({ method: "eth_chainId" }) ?? Promise.resolve(null),
-          1500,
-          null,
-        )) as string | null;
-        setWrongChain(!!chain && chain.toLowerCase() !== TIRAMISU_HEX.toLowerCase());
-        setAddress(a);
+      try {
+        const a = await withTimeout(currentAccount(), 2500, null);
+        if (a && live) {
+          const eth = getProvider();
+          const chain = (await withTimeout(
+            Promise.resolve().then(() => eth?.request({ method: "eth_chainId" }) ?? null),
+            1500,
+            null,
+          )) as string | null;
+          setWrongChain(!!chain && chain.toLowerCase() !== TIRAMISU_HEX.toLowerCase());
+          setAddress(a);
+        }
+      } catch {
+        // Provider probes are best-effort — a broken extension must not
+        // leave the page on the loading skeleton.
+      } finally {
+        if (live) setReady(true);
       }
-      setReady(true);
     })();
     return () => {
       live = false;
