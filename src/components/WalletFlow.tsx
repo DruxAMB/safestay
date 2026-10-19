@@ -43,9 +43,17 @@ export function WalletFlow() {
     if (!address) return;
     start(async () => {
       try {
-        const [open, mine] = await Promise.all([
-          browserOpenTermsFor(address),
-          browserMyTerms(address),
+        // Bound the pair — an exhausted public read quota surfaces as a
+        // retryable error, not a permanent skeleton (see friction.md:
+        // ANON_COST_LIMITED returns over HTTP 200).
+        const [open, mine] = await Promise.race([
+          Promise.all([
+            browserOpenTermsFor(address),
+            browserMyTerms(address),
+          ]),
+          new Promise<never>((_, rej) =>
+            setTimeout(() => rej(new Error("Arkiv read timed out")), 20_000),
+          ),
         ]);
         setOpenTerms(
           open.map((t) => ({
