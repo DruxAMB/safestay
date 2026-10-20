@@ -29,6 +29,21 @@ import { ExternalLink, Loader2 } from "lucide-react";
 
 type MyTerms = TermsDto;
 
+/** A wallet can hold a request without ever resolving it (queued popup,
+ *  locked vault, dead extension). Bound every wallet-side call so the
+ *  button can't spin forever — matches the 120s connect bound. */
+function raceWallet<T>(p: Promise<T>): Promise<T> {
+  return Promise.race([
+    p,
+    new Promise<never>((_, rej) =>
+      setTimeout(
+        () => rej(new Error("No response from the wallet — check for a pending request in your extension, then retry.")),
+        120_000,
+      ),
+    ),
+  ]);
+}
+
 /** The real signing path: connected wallet → sign as tenant or landlord.
  *  Not connected → this renders the demo panel instead (see record page). */
 export function WalletFlow() {
@@ -158,7 +173,7 @@ export function WalletFlow() {
 
 async function walletOutcomeSubmit(address: Address, fd: FormData): Promise<ActionResult> {
   try {
-    const res = await browserRecordOutcome({
+    const res = await raceWallet(browserRecordOutcome({
       signer: browserSigner(address),
       outcomeId: String(fd.get("outcomeId")),
       termsKey: fd.get("termsKey") as `0x${string}`,
@@ -173,7 +188,7 @@ async function walletOutcomeSubmit(address: Address, fd: FormData): Promise<Acti
             byteSize: Number(fd.get("evidenceSize") ?? 0),
           }
         : undefined,
-    });
+    }));
     return { ok: true, txHash: res.txHash, entityKey: res.entityKey, extra: res.evidenceKey ?? undefined };
   } catch (e) {
     return { ok: false, error: friendlyError(e) };
@@ -226,9 +241,9 @@ function LandlordTab({ me, myTerms, onChanged, onSubmit }: {
                       setExtending(t.entityKey);
                       setExtResult(null);
                       try {
-                        const r = await browserExtendTerms(
+                        const r = await raceWallet(browserExtendTerms(
                           browserSigner(me), t.entityKey as `0x${string}`, BigInt(t.expiresAtBlock),
-                        );
+                        ));
                         setExtResult({ key: t.entityKey, tx: r.txHash });
                         toast.success("Terms extended +12 months");
                         onChanged();
@@ -272,7 +287,7 @@ async function walletTermsSubmit(me: Address, fd: FormData): Promise<ActionResul
   try {
     const displayName = String(fd.get("displayName") ?? "").trim();
     const city = String(fd.get("city") ?? "");
-    const res = await browserSignTerms({
+    const res = await raceWallet(browserSignTerms({
       signer: browserSigner(me),
       termsId: String(fd.get("termsId")),
       tenant: tenant as Address,
@@ -283,7 +298,7 @@ async function walletTermsSubmit(me: Address, fd: FormData): Promise<ActionResul
       durationMonths: Number(fd.get("durationMonths") ?? 12),
       note: String(fd.get("note") ?? ""),
       profile: displayName ? { name: displayName, city } : undefined,
-    });
+    }));
     return { ok: true, txHash: res.txHash, entityKey: res.entityKey };
   } catch (e) {
     return { ok: false, error: friendlyError(e) };
