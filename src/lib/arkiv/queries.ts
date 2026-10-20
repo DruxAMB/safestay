@@ -264,7 +264,7 @@ export async function getProfile(landlord: Address): Promise<ProfileDto | null> 
  *  self-signed `landlord_profile` (creator === landlord — only they can
  *  name themselves). No profiles → address-only entry, still real. */
 export async function listDirectory(): Promise<
-  { address: string; name?: string; city?: string; termsCount: number }[]
+  { address: string; name?: string; city?: string; termsCount: number; firstSeenMs: string }[]
 > {
   const reader = createReader();
   const snapshot = await reader.getBlockNumber({ cacheTime: 0 });
@@ -284,7 +284,7 @@ export async function listDirectory(): Promise<
 function buildDirectory(
   termsEntities: Entity[],
   profileEntities: Entity[],
-): { address: string; name?: string; city?: string; termsCount: number }[] {
+): { address: string; name?: string; city?: string; termsCount: number; firstSeenMs: string }[] {
   const profilesByCreator = new Map<string, ProfileDto>();
   for (const p of profileEntities.map(toProfileDto)) {
     // latest profile wins — profiles are replace-not-edit by design
@@ -293,9 +293,13 @@ function buildDirectory(
     }
   }
   const counts = new Map<string, number>();
+  const firstSeen = new Map<string, bigint>();
   for (const t of termsEntities) {
     const c = (t.creator as string).toLowerCase();
     counts.set(c, (counts.get(c) ?? 0) + 1);
+    const at = attrBig(t.attributes, "created_at");
+    const prev = firstSeen.get(c);
+    if (at !== undefined && (prev === undefined || at < prev)) firstSeen.set(c, at);
   }
   return [...counts.entries()]
     .map(([addrLc, termsCount]) => {
@@ -309,13 +313,14 @@ function buildDirectory(
         name: p?.name || SEED_LABELS[addrLc] || undefined,
         city: p?.city || undefined,
         termsCount,
+        firstSeenMs: (firstSeen.get(addrLc) ?? 0n).toString(),
       };
     })
     .sort((a, b) => b.termsCount - a.termsCount);
 }
 
 export type HeroData = {
-  directory: { address: string; name?: string; city?: string; termsCount: number }[];
+  directory: { address: string; name?: string; city?: string; termsCount: number; firstSeenMs: string }[];
   termsCount: number;
   outcomesCount: number;
   verifiedCount: number;

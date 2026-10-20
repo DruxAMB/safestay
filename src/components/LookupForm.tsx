@@ -16,6 +16,9 @@ export type DirectoryEntry = {
   name?: string;
   city?: string;
   termsCount: number;
+  /** ms timestamp of the landlord's earliest deposit_terms — used to order
+   *  the chip row oldest-first. */
+  firstSeenMs: string;
 };
 
 /** Landlord lookup — address OR display name. The directory below is live
@@ -29,6 +32,15 @@ export function LookupForm({ directory, directoryNote }: {
   directoryNote?: string;
 }) {
   const entries = directory ?? [];
+  // Chips cap at the four oldest landlords — the seeded set — so test
+  // signings don't crowd the showcase row. `entries` stays full: name
+  // lookup above still resolves every real on-chain landlord.
+  const chips = [...entries]
+    .sort((a, b) => {
+      const d = BigInt(a.firstSeenMs || "0") - BigInt(b.firstSeenMs || "0");
+      return d < 0n ? -1 : d > 0n ? 1 : 0;
+    })
+    .slice(0, 4);
   const router = useRouter();
   const id = useId();
   const [typed, setTyped] = useState("");
@@ -123,7 +135,7 @@ export function LookupForm({ directory, directoryNote }: {
         Landlord directory — read live from Arkiv
       </p>
       <div className="mt-2 flex flex-wrap gap-2">
-        {entries.map((l) => (
+        {chips.map((l) => (
           <button
             key={l.address}
             type="button"
