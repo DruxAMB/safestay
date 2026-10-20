@@ -11,7 +11,6 @@ import { Skeleton } from "@/components/ui";
 import { LinkHint } from "@/components/LinkHint";
 import { DemoVideo } from "@/components/DemoVideo";
 import { HeroPin } from "@/components/HeroPin";
-import { ScrollPin } from "@/components/ScrollPin";
 import AnimatedContent from "@/components/AnimatedContent";
 import { ShieldCheck, FileSignature, Eye, Timer } from "lucide-react";
 
@@ -67,32 +66,34 @@ export default function Home() {
         </HeroSelection>
       </HeroPin>
 
-      {/* Demo video — layered stack over the pinned hero: the heading copy
-          pins at 16% as a fixed placard, then the card rises through it,
-          covers it, and parks at 12% — until the obsidian band slides over
-          everything. Copy z-5 < card z-10 < obsidian (later DOM, same z-10).
-          Spacers stay on for both pins so the crossing is scroll-driven,
-          not a layout jump. */}
-      <section aria-label="Demo video" className="relative">
-        <ScrollPin start="top 16%" className="relative z-[5]">
-          <div className="mx-auto w-full max-w-4xl bg-background px-4 pt-14 sm:px-6 sm:pt-20">
+      {/* Demo video — layered stack over the pinned hero, done with native
+          sticky instead of pinned triggers: the heading copy sticks at
+          top:16vh as a fixed placard, the card scrolls up through it (z-10
+          over z-5), covers it, and parks at top:12vh until the section's
+          height runs out and the obsidian band sweeps over. The hero's
+          spacer-less pin collapses the scroll space below it, so the tall
+          top padding + card margin restore the distances where each beat
+          lands. Sticky needs no JS and reverses for free. */}
+      <section aria-label="Demo video" className="relative h-[210vh]">
+        <div className="sticky top-[16vh] z-[5]">
+          <div className="mx-auto w-full max-w-4xl bg-background px-4 pb-6 pt-14 sm:px-6">
             <p className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
               Watch the demo
             </p>
             <h2 className="mt-2 text-2xl tracking-tight sm:text-3xl">
               Eighty-seven seconds, end to end.
             </h2>
-            <p className="mt-2 max-w-xl pb-6 text-muted-foreground">
+            <p className="mt-2 max-w-xl text-muted-foreground">
               The whole loop — terms signed, outcome recorded, history verified — on real
               Arkiv entities.
             </p>
           </div>
-        </ScrollPin>
-        <ScrollPin start="top 12%" className="relative z-10">
-          <div className="mx-auto w-full max-w-4xl px-4 pb-14 pt-8 sm:px-6 sm:pb-20">
+        </div>
+        <div className="sticky top-[12vh] z-10 mt-32">
+          <div className="mx-auto w-full max-w-4xl px-4 sm:px-6">
             <DemoVideo />
           </div>
-        </ScrollPin>
+        </div>
       </section>
 
       {/* Obsidian band — how it works, ruled columns. z-10 keeps it
