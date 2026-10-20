@@ -10,7 +10,7 @@ import { getHeroData, type HeroData } from "@/lib/arkiv/queries";
 import { Skeleton } from "@/components/ui";
 import { LinkHint } from "@/components/LinkHint";
 import { DemoVideo } from "@/components/DemoVideo";
-import { HeroPin } from "@/components/HeroPin";
+import { SectionPin } from "@/components/SectionPin";
 import AnimatedContent from "@/components/AnimatedContent";
 import { ShieldCheck, FileSignature, Eye, Timer } from "lucide-react";
 
@@ -19,7 +19,7 @@ export default function Home() {
     <div>
       {/* Hero — evidence dossier: the console is the tool, the specimen is
           a real on-chain entity, every number is live. */}
-      <HeroPin className="bg-stipple relative overflow-hidden">
+      <SectionPin className="bg-stipple relative overflow-hidden">
         <HeroSelection>
         {/* Full-bleed WebGL canvas — mounted on the section, not the right
             column, so the building silhouette can't clip at column edges.
@@ -64,41 +64,33 @@ export default function Home() {
           </Suspense>
         </div>
         </HeroSelection>
-      </HeroPin>
+      </SectionPin>
 
-      {/* Demo video — layered stack over the pinned hero, done with native
-          sticky instead of pinned triggers: the heading copy sticks at
-          top:16vh as a fixed placard, the card scrolls up through it (z-10
-          over z-5), covers it, and parks at top:12vh until the section's
-          height runs out and the obsidian band sweeps over. The hero's
-          spacer-less pin collapses the scroll space below it, so the tall
-          top padding + card margin restore the distances where each beat
-          lands. Sticky needs no JS and reverses for free. */}
-      <section aria-label="Demo video" className="relative h-[210vh]">
-        <div className="sticky top-[16vh] z-[5]">
-          <div className="mx-auto w-full max-w-4xl bg-background px-4 pb-6 pt-14 sm:px-6">
-            <p className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
-              Watch the demo
-            </p>
-            <h2 className="mt-2 text-2xl tracking-tight sm:text-3xl">
-              Eighty-seven seconds, end to end.
-            </h2>
-            <p className="mt-2 max-w-xl text-muted-foreground">
-              The whole loop — terms signed, outcome recorded, history verified — on real
-              Arkiv entities.
-            </p>
-          </div>
-        </div>
-        <div className="sticky top-[12vh] z-10 mt-32">
-          <div className="mx-auto w-full max-w-4xl px-4 sm:px-6">
+      {/* Demo video — click-to-play facade, player JS loads on demand.
+          Pinned once its bottom reaches the viewport bottom; the opaque
+          bg + z-10 make it cover the pinned hero, then the obsidian band
+          (z-20) rises over it in turn. */}
+      <SectionPin className="relative z-10 bg-background" ariaLabel="Demo video">
+        <AnimatedContent distance={24} duration={0.7} threshold={0.15} className="mx-auto w-full max-w-4xl px-4 py-14 sm:px-6 sm:py-20">
+          <p className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
+            Watch the demo
+          </p>
+          <h2 className="mt-2 text-2xl tracking-tight sm:text-3xl">
+            Eighty-seven seconds, end to end.
+          </h2>
+          <p className="mt-2 max-w-xl text-muted-foreground">
+            The whole loop — terms signed, outcome recorded, history verified — on real
+            Arkiv entities.
+          </p>
+          <div className="mt-8">
             <DemoVideo />
           </div>
-        </div>
-      </section>
+        </AnimatedContent>
+      </SectionPin>
 
-      {/* Obsidian band — how it works, ruled columns. z-10 keeps it
-          above the pinned layers as it scrolls over. */}
-      <section className="relative z-10 bg-surface-inverse text-text-inverse" aria-label="How it works">
+      {/* Obsidian band — how it works, ruled columns. Opaque + z-20: the
+          layer that rises over the pinned demo section. */}
+      <section className="relative z-20 bg-surface-inverse text-text-inverse" aria-label="How it works">
         <AnimatedContent distance={24} duration={0.7} threshold={0.15} className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-6 sm:py-20">
           <h2 className="text-sm font-medium uppercase tracking-wide text-text-inverse-muted">
             How it works
