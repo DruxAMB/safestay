@@ -9,6 +9,7 @@ import { HeroBuildingImg } from "@/components/HeroBuildingImg";
 import { getHeroData, type HeroData } from "@/lib/arkiv/queries";
 import { Skeleton } from "@/components/ui";
 import { LinkHint } from "@/components/LinkHint";
+import { DemoVideo } from "@/components/DemoVideo";
 import AnimatedContent from "@/components/AnimatedContent";
 import { ShieldCheck, FileSignature, Eye, Timer } from "lucide-react";
 
@@ -62,6 +63,25 @@ export default function Home() {
           </Suspense>
         </div>
         </HeroSelection>
+      </section>
+
+      {/* Demo video — click-to-play facade, player JS loads on demand. */}
+      <section aria-label="Demo video">
+        <AnimatedContent distance={24} duration={0.7} threshold={0.15} className="mx-auto w-full max-w-4xl px-4 py-14 sm:px-6 sm:py-20">
+          <p className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
+            Watch the demo
+          </p>
+          <h2 className="mt-2 text-2xl tracking-tight sm:text-3xl">
+            Eighty-seven seconds, end to end.
+          </h2>
+          <p className="mt-2 max-w-xl text-muted-foreground">
+            The whole loop — terms signed, outcome recorded, history verified — on real
+            Arkiv entities.
+          </p>
+          <div className="mt-8">
+            <DemoVideo />
+          </div>
+        </AnimatedContent>
       </section>
 
       {/* Obsidian band — how it works, ruled columns. */}
