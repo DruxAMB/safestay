@@ -12,20 +12,22 @@ import { useToast } from "./Toaster";
 import { friendlyError } from "@/lib/errors";
 import {
   browserExtendTerms,
-  browserMyTerms,
-  browserOpenTermsFor,
   browserRecordOutcome,
   browserSignTerms,
   browserSigner,
 } from "@/lib/arkiv/browser";
-import type { ActionResult } from "@/app/actions";
+import {
+  myTermsForWalletAction,
+  openTermsForWalletAction,
+  type ActionResult,
+} from "@/app/actions";
 import type { TermsDto } from "@/lib/arkiv/schema";
 import type { Outcome } from "@/lib/arkiv/config";
 import { explorerTxUrl, explorerEntityUrl } from "@/lib/arkiv/config";
 import { inr, shortAddr } from "@/lib/format";
 import { ExternalLink, Loader2 } from "lucide-react";
 
-type MyTerms = Awaited<ReturnType<typeof browserMyTerms>>[number];
+type MyTerms = TermsDto;
 
 /** The real signing path: connected wallet → sign as tenant or landlord.
  *  Not connected → this renders the demo panel instead (see record page). */
@@ -43,31 +45,19 @@ export function WalletFlow() {
     if (!address) return;
     start(async () => {
       try {
-        // Bound the pair — an exhausted public read quota surfaces as a
-        // retryable error, not a permanent skeleton (see friction.md:
-        // ANON_COST_LIMITED returns over HTTP 200).
+        // Bound the pair — a slow/failed read surfaces as a retryable
+        // error, not a permanent skeleton. Reads route through server
+        // actions so the keyed RPC budget covers them.
         const [open, mine] = await Promise.race([
           Promise.all([
-            browserOpenTermsFor(address),
-            browserMyTerms(address),
+            openTermsForWalletAction(address),
+            myTermsForWalletAction(address),
           ]),
           new Promise<never>((_, rej) =>
             setTimeout(() => rej(new Error("Arkiv read timed out")), 20_000),
           ),
         ]);
-        setOpenTerms(
-          open.map((t) => ({
-            entityKey: t.termsKey,
-            creator: t.creator,
-            tenant: address,
-            depositInr: t.depositInr,
-            city: t.city,
-            propertyLabel: t.label,
-            createdAtMs: "0",
-            expiresAtBlock: "0",
-            displayLabel: t.label,
-          })),
-        );
+        setOpenTerms(open);
         setMyTerms(mine);
         setLoadError(null);
       } catch (e) {
@@ -218,43 +208,43 @@ function LandlordTab({ me, myTerms, onChanged, onSubmit }: {
         ) : (
           <ul className="mt-3 flex flex-col gap-2">
             {myTerms.map((t) => (
-              <li key={t.key} className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-card px-3 py-2.5 text-sm">
-                <span className="font-medium">{t.label || shortAddr(t.key)}</span>
+              <li key={t.entityKey} className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-card px-3 py-2.5 text-sm">
+                <span className="font-medium">{t.displayLabel || shortAddr(t.entityKey)}</span>
                 <span className="text-muted-foreground">
                   {inr(t.depositInr)} · {t.city} · tenant {shortAddr(t.tenant)}
                 </span>
                 <span className="ml-auto inline-flex items-center gap-2">
-                  <a href={explorerEntityUrl(t.key)} target="_blank" rel="noopener noreferrer"
+                  <a href={explorerEntityUrl(t.entityKey)} target="_blank" rel="noopener noreferrer"
                      className="inline-flex items-center gap-1 font-mono text-xs text-foreground underline underline-offset-2 [@media(hover:hover)]:hover:underline">
-                    {shortAddr(t.key)} <ExternalLink size={11} aria-hidden />
+                    {shortAddr(t.entityKey)} <ExternalLink size={11} aria-hidden />
                   </a>
                   <Button
                     variant="secondary"
-                    disabled={extending === t.key}
+                    disabled={extending === t.entityKey}
                     onClick={async () => {
-                      setExtending(t.key);
+                      setExtending(t.entityKey);
                       setExtResult(null);
                       try {
                         const r = await browserExtendTerms(
-                          browserSigner(me), t.key, BigInt(t.expiresAtBlock),
+                          browserSigner(me), t.entityKey as `0x${string}`, BigInt(t.expiresAtBlock),
                         );
-                        setExtResult({ key: t.key, tx: r.txHash });
+                        setExtResult({ key: t.entityKey, tx: r.txHash });
                         toast.success("Terms extended +12 months");
                         onChanged();
                       } catch (e) {
                         const msg = friendlyError(e);
-                        setExtResult({ key: t.key, err: msg });
+                        setExtResult({ key: t.entityKey, err: msg });
                         toast.danger("Couldn't extend the terms", msg);
                       } finally {
                         setExtending(null);
                       }
                     }}
                   >
-                    {extending === t.key && <Loader2 size={13} className="animate-spin" aria-hidden />}
+                    {extending === t.entityKey && <Loader2 size={13} className="animate-spin" aria-hidden />}
                     +12mo
                   </Button>
                 </span>
-                {extResult?.key === t.key && (
+                {extResult?.key === t.entityKey && (
                   <p className={`w-full text-xs ${extResult.err ? "text-danger" : "text-success"}`} role="status">
                     {extResult.err ?? (
                       <>extended ·{" "}

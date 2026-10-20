@@ -216,6 +216,17 @@ export async function getOpenTermsForTenant(tenant: Address): Promise<TermsDto[]
   return terms.filter((t) => !answered.has(t.entityKey as Hex));
 }
 
+/** All deposit_terms signed by this wallet — the landlord's own list in
+ *  the connected-wallet flow. */
+export async function getTermsByCreator(creator: Address): Promise<TermsDto[]> {
+  const reader = createReader();
+  const res = await walk(reader, [
+    eq("project", str(PROJECT)),
+    eq("entity_type", str("deposit_terms")),
+  ], creator);
+  return res.entities.map(toTermsDto);
+}
+
 export async function getEvidenceForOutcome(outcomeKey: Hex): Promise<EvidenceDto[]> {
   const reader = createReader();
   const res = await walk(reader, [

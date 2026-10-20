@@ -4,6 +4,7 @@ import { z } from "zod";
 import { isAddress } from "viem";
 import { refresh } from "next/cache";
 import { recordOutcome, recordTerms, renewTerms } from "@/lib/arkiv/writes";
+import { getOpenTermsForTenant, getTermsByCreator } from "@/lib/arkiv/queries";
 import { friendlyError } from "@/lib/errors";
 import type { Outcome, EvidenceKind } from "@/lib/arkiv/config";
 
@@ -83,6 +84,19 @@ export async function recordTermsAction(form: FormData): Promise<ActionResult> {
   } catch (e) {
     return { ok: false, error: friendlyError(e) };
   }
+}
+
+/** Read proxy for the connected-wallet flow: reads are public, and routing
+ *  them server-side lets the keyed RPC budget (ARKIV_API_KEY) cover them —
+ *  an anonymous browser read can hit ANON_COST_LIMITED on a busy IP. */
+export async function openTermsForWalletAction(address: string) {
+  if (!isAddress(address)) return [];
+  return getOpenTermsForTenant(address as `0x${string}`);
+}
+
+export async function myTermsForWalletAction(address: string) {
+  if (!isAddress(address)) return [];
+  return getTermsByCreator(address as `0x${string}`);
 }
 
 export async function renewTermsAction(termsKey: string): Promise<ActionResult> {
