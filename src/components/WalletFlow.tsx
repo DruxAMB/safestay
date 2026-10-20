@@ -38,7 +38,7 @@ export function WalletFlow() {
   const [myTerms, setMyTerms] = useState<MyTerms[] | null>(null);
   const [openTerms, setOpenTerms] = useState<TermsDto[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [loading, start] = useTransition();
+  const [, start] = useTransition();
   const t = useToast();
 
   const refresh = useCallback(() => {
@@ -115,7 +115,7 @@ export function WalletFlow() {
       </div>
 
       <div className="mt-4">
-        {loading || openTerms === null || myTerms === null ? (
+        {openTerms === null || myTerms === null ? (
           loadError ? (
             <div role="alert" className="flex flex-col items-start gap-3 rounded-md bg-danger-bg px-4 py-3 text-sm text-danger">
               <p>Couldn&rsquo;t load your records — {loadError}</p>
@@ -195,6 +195,7 @@ function LandlordTab({ me, myTerms, onChanged, onSubmit }: {
       <TermsForm
         defaultTenant={me}
         showProfileName
+        historyHref={`/landlord/${me}`}
         signerNote={<>Signed by your wallet — you are the landlord’s on-chain creator. A display name writes a <code className="font-mono">landlord_profile</code> in the same tx.</>}
         onSubmit={onSubmit}
       />

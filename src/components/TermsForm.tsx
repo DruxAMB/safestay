@@ -1,13 +1,13 @@
 "use client";
 
-import { useId, useMemo, useState, useTransition } from "react";
+import { useId, useState, useTransition } from "react";
 import { isAddress } from "viem";
 import type { ActionResult } from "@/app/actions";
-import { explorerEntityUrl, explorerTxUrl } from "@/lib/arkiv/config";
-import { Button, Card, Input, Label, Badge } from "@/components/ui";
+import { Button, Card, Input, Label } from "@/components/ui";
 import { useToast } from "@/components/Toaster";
+import { WriteSuccess } from "./WriteSuccess";
 import { friendlyError } from "@/lib/errors";
-import { ExternalLink, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 /** Landlord terms-signing form — presentational; `onSubmit` decides who
  *  signs (connected wallet or server demo landlord). */
@@ -16,14 +16,18 @@ export function TermsForm({
   onSubmit,
   signerNote,
   showProfileName = false,
+  historyHref,
 }: {
   defaultTenant: string;
   onSubmit: (fd: FormData) => Promise<ActionResult>;
   signerNote: React.ReactNode;
   showProfileName?: boolean;
+  /** Where the signer can see the new terms — the signer's history page. */
+  historyHref?: string;
 }) {
   const id = useId();
-  const termsId = useMemo(() => `t_${crypto.randomUUID().replaceAll("-", "").slice(0, 24)}`, []);
+  const newTermsId = () => `t_${crypto.randomUUID().replaceAll("-", "").slice(0, 24)}`;
+  const [termsId, setTermsId] = useState(newTermsId);
   const [tenant, setTenant] = useState(defaultTenant);
   const [deposit, setDeposit] = useState("");
   const [city, setCity] = useState("");
@@ -66,29 +70,20 @@ export function TermsForm({
 
   if (result?.ok) {
     return (
-      <Card className="p-6" role="status">
-        <Badge tone="success">Terms signed on Arkiv</Badge>
-        <p className="mt-3 text-sm text-muted-foreground">
-          A read-only <code className="font-mono">deposit_terms</code> entity now names the
-          tenant wallet — it can’t be edited, only outlived. Share the tenant their link:
-          they record the outcome against this exact record.
-        </p>
-        <div className="mt-4 flex flex-col gap-2 font-mono text-sm">
-          <a href={explorerEntityUrl(result.entityKey)} target="_blank" rel="noopener noreferrer"
-             className="inline-flex items-center gap-1 break-all text-foreground underline underline-offset-2 [@media(hover:hover)]:hover:underline">
-            terms {result.entityKey} <ExternalLink size={12} aria-hidden />
-          </a>
-          {result.txHash !== "0x0" && (
-            <a href={explorerTxUrl(result.txHash)} target="_blank" rel="noopener noreferrer"
-               className="inline-flex items-center gap-1 break-all text-foreground underline underline-offset-2 [@media(hover:hover)]:hover:underline">
-              tx {result.txHash} <ExternalLink size={12} aria-hidden />
-            </a>
-          )}
-        </div>
-        <Button variant="secondary" className="mt-5" onClick={() => setResult(null)}>
-          Sign another
-        </Button>
-      </Card>
+      <WriteSuccess
+        title="Terms signed on Arkiv"
+        body="A read-only deposit_terms entity now names the tenant wallet — it can’t be edited, only outlived. The tenant records their outcome against this exact record."
+        entityLabel="terms"
+        entityKey={result.entityKey}
+        txHash={result.txHash}
+        historyHref={historyHref}
+        historyLabel="See it on your history →"
+        onAgain={() => {
+          setResult(null);
+          setTermsId(newTermsId());
+        }}
+        againLabel="Sign another"
+      />
     );
   }
 

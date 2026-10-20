@@ -61,6 +61,7 @@ async function Roles() {
 async function DemoForms() {
   await io();
   const tenant = walletAddress("tenant");
+  const landlord = walletAddress("landlord");
   const openTerms = await Promise.race([
     getOpenTermsForTenant(tenant),
     new Promise<never>((_, rej) =>
@@ -89,6 +90,7 @@ async function DemoForms() {
         <h2 className="mb-3 font-medium">Sign terms as demo landlord</h2>
         <TermsForm
           defaultTenant={tenant}
+          historyHref={`/landlord/${landlord}`}
           onSubmit={recordTermsAction}
           signerNote={
             <>
