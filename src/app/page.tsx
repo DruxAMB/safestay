@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui";
 import { LinkHint } from "@/components/LinkHint";
 import { DemoVideo } from "@/components/DemoVideo";
 import { HeroPin } from "@/components/HeroPin";
+import { ScrollPin } from "@/components/ScrollPin";
 import AnimatedContent from "@/components/AnimatedContent";
 import { ShieldCheck, FileSignature, Eye, Timer } from "lucide-react";
 
@@ -66,32 +67,36 @@ export default function Home() {
         </HeroSelection>
       </HeroPin>
 
-      {/* Demo video — the CARD alone rises over the pinned hero (transparent
-          section, scrub-linked lift). The copy lives in a separate section
-          below, on an opaque band — it never crosses the pinned hero. */}
-      <section aria-label="Demo video" className="relative z-10">
-        <AnimatedContent distance={120} duration={0.9} threshold={0.1} scrub={1} className="mx-auto w-full max-w-4xl px-4 pt-14 sm:px-6 sm:pt-20">
-          <DemoVideo />
-        </AnimatedContent>
-      </section>
-
-      <section className="relative z-10 bg-background" aria-label="About the demo">
-        <div className="mx-auto w-full max-w-4xl px-4 pb-14 pt-8 sm:px-6 sm:pb-20">
-          <p className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
-            Watch the demo
-          </p>
-          <h2 className="mt-2 text-2xl tracking-tight sm:text-3xl">
-            Eighty-seven seconds, end to end.
-          </h2>
-          <p className="mt-2 max-w-xl text-muted-foreground">
-            The whole loop — terms signed, outcome recorded, history verified — on real
-            Arkiv entities.
-          </p>
-        </div>
+      {/* Demo video — layered stack over the pinned hero: the heading copy
+          pins at 16% as a fixed placard, then the card rises through it,
+          covers it, and parks at 12% — until the obsidian band slides over
+          everything. Copy z-5 < card z-10 < obsidian (later DOM, same z-10).
+          Spacers stay on for both pins so the crossing is scroll-driven,
+          not a layout jump. */}
+      <section aria-label="Demo video" className="relative">
+        <ScrollPin start="top 16%" className="relative z-[5]">
+          <div className="mx-auto w-full max-w-4xl bg-background px-4 pt-14 sm:px-6 sm:pt-20">
+            <p className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
+              Watch the demo
+            </p>
+            <h2 className="mt-2 text-2xl tracking-tight sm:text-3xl">
+              Eighty-seven seconds, end to end.
+            </h2>
+            <p className="mt-2 max-w-xl pb-6 text-muted-foreground">
+              The whole loop — terms signed, outcome recorded, history verified — on real
+              Arkiv entities.
+            </p>
+          </div>
+        </ScrollPin>
+        <ScrollPin start="top 12%" className="relative z-10">
+          <div className="mx-auto w-full max-w-4xl px-4 pb-14 pt-8 sm:px-6 sm:pb-20">
+            <DemoVideo />
+          </div>
+        </ScrollPin>
       </section>
 
       {/* Obsidian band — how it works, ruled columns. z-10 keeps it
-          above the pinned hero as it scrolls over. */}
+          above the pinned layers as it scrolls over. */}
       <section className="relative z-10 bg-surface-inverse text-text-inverse" aria-label="How it works">
         <AnimatedContent distance={24} duration={0.7} threshold={0.15} className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-6 sm:py-20">
           <h2 className="text-sm font-medium uppercase tracking-wide text-text-inverse-muted">
