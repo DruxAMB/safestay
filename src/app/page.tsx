@@ -10,6 +10,7 @@ import { getHeroData, type HeroData } from "@/lib/arkiv/queries";
 import { Skeleton } from "@/components/ui";
 import { LinkHint } from "@/components/LinkHint";
 import { DemoVideo } from "@/components/DemoVideo";
+import { HeroPin } from "@/components/HeroPin";
 import AnimatedContent from "@/components/AnimatedContent";
 import { ShieldCheck, FileSignature, Eye, Timer } from "lucide-react";
 
@@ -18,7 +19,7 @@ export default function Home() {
     <div>
       {/* Hero — evidence dossier: the console is the tool, the specimen is
           a real on-chain entity, every number is live. */}
-      <section className="bg-stipple relative overflow-hidden">
+      <HeroPin className="bg-stipple relative overflow-hidden">
         <HeroSelection>
         {/* Full-bleed WebGL canvas — mounted on the section, not the right
             column, so the building silhouette can't clip at column edges.
@@ -63,10 +64,11 @@ export default function Home() {
           </Suspense>
         </div>
         </HeroSelection>
-      </section>
+      </HeroPin>
 
-      {/* Demo video — click-to-play facade, player JS loads on demand. */}
-      <section aria-label="Demo video">
+      {/* Demo video — click-to-play facade, player JS loads on demand.
+          Opaque bg + z-10: it slides over the pinned hero as a layer. */}
+      <section aria-label="Demo video" className="relative z-10 bg-background">
         <AnimatedContent distance={24} duration={0.7} threshold={0.15} className="mx-auto w-full max-w-4xl px-4 py-14 sm:px-6 sm:py-20">
           <p className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
             Watch the demo
@@ -84,8 +86,9 @@ export default function Home() {
         </AnimatedContent>
       </section>
 
-      {/* Obsidian band — how it works, ruled columns. */}
-      <section className="bg-surface-inverse text-text-inverse" aria-label="How it works">
+      {/* Obsidian band — how it works, ruled columns. z-10 keeps it
+          above the pinned hero as it scrolls over. */}
+      <section className="relative z-10 bg-surface-inverse text-text-inverse" aria-label="How it works">
         <AnimatedContent distance={24} duration={0.7} threshold={0.15} className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-6 sm:py-20">
           <h2 className="text-sm font-medium uppercase tracking-wide text-text-inverse-muted">
             How it works

@@ -69,7 +69,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         </header>
         <main className="flex-1">{children}</main>
         <Suspense><NavLoader /></Suspense>
-        <footer className="border-t border-border-inverse bg-surface-inverse">
+        <footer className="relative z-10 border-t border-border-inverse bg-surface-inverse">
           <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-1 px-4 py-4 text-xs text-text-inverse-muted sm:px-6">
             <span>
               Built on Arkiv by{" "}
