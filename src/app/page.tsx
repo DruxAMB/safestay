@@ -74,14 +74,9 @@ export default function Home() {
           <p className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
             Watch the demo
           </p>
-          <h2 className="mt-2 text-2xl tracking-tight sm:text-3xl">
-            Eighty-seven seconds, end to end.
-          </h2>
-          <p className="mt-2 max-w-xl text-muted-foreground">
-            The whole loop — terms signed, outcome recorded, history verified — on real
-            Arkiv entities.
-          </p>
-          <AnimatedContent distance={120} duration={0.9} threshold={0.1} scrub={1} className="mt-8">
+          {/* The card is the moving element — it rises over the hero as the
+              stats strip pins, scrub-tied to scroll. */}
+          <AnimatedContent distance={120} duration={0.9} threshold={0.1} scrub={1} className="mt-6">
             <DemoVideo />
           </AnimatedContent>
         </AnimatedContent>
