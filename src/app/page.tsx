@@ -70,16 +70,21 @@ export default function Home() {
           Transparent section: the card rises over the pinned hero, which
           stays visible around it until the obsidian band covers. */}
       <section aria-label="Demo video" className="relative z-10">
-        <AnimatedContent distance={24} duration={0.7} threshold={0.15} className="mx-auto w-full max-w-4xl px-4 py-14 sm:px-6 sm:py-20">
+        <div className="mx-auto w-full max-w-4xl px-4 py-14 sm:px-6 sm:py-20">
           <p className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
             Watch the demo
           </p>
-          {/* The card is the moving element — it rises over the hero as the
-              stats strip pins, scrub-tied to scroll. */}
-          <AnimatedContent distance={120} duration={0.9} threshold={0.1} scrub={1} className="mt-6">
+          <h2 className="mt-2 text-2xl tracking-tight sm:text-3xl">
+            Eighty-seven seconds, end to end.
+          </h2>
+          <p className="mt-2 max-w-xl text-muted-foreground">
+            The whole loop — terms signed, outcome recorded, history verified — on real
+            Arkiv entities.
+          </p>
+          <AnimatedContent distance={120} duration={0.9} threshold={0.1} scrub={1} className="mt-8">
             <DemoVideo />
           </AnimatedContent>
-        </AnimatedContent>
+        </div>
       </section>
 
       {/* Obsidian band — how it works, ruled columns. z-10 keeps it
