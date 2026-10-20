@@ -67,8 +67,9 @@ export default function Home() {
       </HeroPin>
 
       {/* Demo video — click-to-play facade, player JS loads on demand.
-          Opaque bg + z-10: it slides over the pinned hero as a layer. */}
-      <section aria-label="Demo video" className="relative z-10 bg-background">
+          Transparent section: the card rises over the pinned hero, which
+          stays visible around it until the obsidian band covers. */}
+      <section aria-label="Demo video" className="relative z-10">
         <AnimatedContent distance={24} duration={0.7} threshold={0.15} className="mx-auto w-full max-w-4xl px-4 py-14 sm:px-6 sm:py-20">
           <p className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
             Watch the demo
@@ -80,9 +81,9 @@ export default function Home() {
             The whole loop — terms signed, outcome recorded, history verified — on real
             Arkiv entities.
           </p>
-          <div className="mt-8">
+          <AnimatedContent distance={120} duration={0.9} threshold={0.1} scrub={1} className="mt-8">
             <DemoVideo />
-          </div>
+          </AnimatedContent>
         </AnimatedContent>
       </section>
 
