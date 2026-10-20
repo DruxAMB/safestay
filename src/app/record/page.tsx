@@ -6,6 +6,7 @@ import { recordOutcomeAction, recordTermsAction } from "@/app/actions";
 import { OutcomeForm } from "@/components/OutcomeForm";
 import { TermsForm } from "@/components/TermsForm";
 import { WalletFlow } from "@/components/WalletFlow";
+import { ReadBoundary } from "@/components/ReadBoundary";
 import { Badge, Skeleton } from "@/components/ui";
 import { shortAddr } from "@/lib/format";
 
@@ -29,12 +30,14 @@ export default function RecordPage() {
             Entities written here are real on Arkiv — but the creator is a seeded demo
             wallet, not you. Judges without a wallet can still exercise the full write path.
           </p>
-          <Suspense fallback={<RolesSkeleton />}>
-            <Roles />
-          </Suspense>
-          <Suspense fallback={<Skeleton className="mt-6 h-96 w-full rounded-lg" />}>
-            <DemoForms />
-          </Suspense>
+          <ReadBoundary>
+            <Suspense fallback={<RolesSkeleton />}>
+              <Roles />
+            </Suspense>
+            <Suspense fallback={<Skeleton className="mt-6 h-96 w-full rounded-lg" />}>
+              <DemoForms />
+            </Suspense>
+          </ReadBoundary>
         </div>
       </details>
     </div>
